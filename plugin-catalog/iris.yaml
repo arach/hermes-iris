@@ -1,0 +1,23 @@
+name: iris
+repo: https://github.com/example/hermes-iris
+sha: REPLACE_WITH_40_CHAR_SHA
+title: Iris
+description: >-
+  Iris is a 3D visualizer for Hermes session transcripts and agent logs. A
+  dashboard one-pager (three.js) plus a Desktop pane. Bundled redacted sample;
+  optional local live session export and log tail. No credentials, no core overrides.
+maintainer: Arach
+tier: community
+category: desktop
+requires_hermes: ">=0.23.1"
+version: "0.1.0"
+readme: true
+known_issues:
+  - "repo and sha are placeholders. Replace both with a public repository and its real 40-character commit SHA before catalog submission."
+  - "Under plugins.isolation: host the hermes iris terminal command is skipped. The /iris slash command still works. The dashboard page does not depend on that command."
+  - "The Desktop pane stays off until you enable it in Capabilities, then Plugins. Enabling the Python plugin does not enable the Desktop pane."
+capabilities:
+  provides_tools: []
+  provides_hooks: []
+  provides_middleware: []
+  requires_env: []

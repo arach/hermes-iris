@@ -1,0 +1,10 @@
+{
+  "name": "iris",
+  "label": "Iris",
+  "description": "Iris — 3D visualizer for Hermes session transcripts and agent logs.",
+  "icon": "Activity",
+  "version": "0.1.0",
+  "tab": { "path": "/iris", "position": "end" },
+  "entry": "dist/index.js",
+  "api": "plugin_api.py"
+}

@@ -1,0 +1,8 @@
+name: iris
+version: "0.1.0"
+description: Iris — 3D visualizer for Hermes session transcripts and agent logs.
+author: Arach
+license: MIT
+requires_hermes: ">=0.23.1"
+provides_commands:
+  - iris

@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.env
+.env.*
+auth.json
+credentials*
+.snapshots/
+.grok-runs/
+dashboard/index.html
+dashboard/iris.preview.html
+node_modules/
+*.log
+.DS_Store

@@ -394,6 +394,7 @@
   .tag.hot { color: #fff6ea; }
   .tag.dim { color: #8aa396; }
   .tag.err { color: #ffb4b4; }
+  .tag.warn { color: #f5bd7e; }
   .tag.tick { color: #667068; letter-spacing: 0.06em; }
   .tag.sel {
     color: #fff7ec;
@@ -653,13 +654,15 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 const WORLD_X = 36;
-const VIEW_THETA = 0.36;
-const VIEW_PHI = 0.32;
+const LANE_Y = 0.18;
+const LANE_GAP = 1.55;
+const VIEW_THETA = 0;
+const VIEW_PHI = 0.96;
 const MAX_NODES = 2800;
 const MAX_ARCS = 400;
 const MAX_LANES = 26;
 const FOG_D = 0.02;
-const FLOW = { yAmp: 0.058, zAmp: 0.042, yFreq: 0.62, zFreq: 0.4, ySpeed: 0.33, zSpeed: 0.2 };
+const FLOW = { yAmp: 0, zAmp: 0, yFreq: 0.62, zFreq: 0.4, ySpeed: 0.33, zSpeed: 0.2 };
 const BUS_ORDER = ["agent", "tools", "cli", "gateway", "gui", "cron", "other", "system"];
 const SESSION_COLORS = ["#ffe0b0", "#ffc47a", "#c8ffe8", "#7ddec4", "#b6fff0"];
 const HINT = "Drag orbit  ·  scroll dolly  ·  click fly  ·  space play";
@@ -1001,7 +1004,7 @@ function updateNodes(time) {
       view.nodes.setColorAt(i, tmpColor);
       if (view.ticks) {
         const th = n.tickH * (1 + flare * 1.7) * (outside ? 0.45 : 1);
-        dummy.position.set(n.x, n.ry, n.rz);
+        dummy.position.set(n.x, n.ry + th * 0.5, n.rz);
         dummy.scale.set(n.important ? 0.022 : 0.011, Math.max(0.04, th), n.important ? 0.022 : 0.011);
         dummy.rotation.set(0, 0, 0);
         dummy.updateMatrix();
@@ -1081,8 +1084,13 @@ function layoutWorld() {
   }
   state.fitRadius = Math.max(16, 13 + WORLD_X * 0.16 + state.lanes.length * 0.65);
 
-  const yFloor = (state.lanes.length ? Math.min(...state.lanes.map((l) => l.y)) : 0) - 1.55;
-  const yTop = (state.lanes.length ? Math.max(...state.lanes.map((l) => l.y)) : 0) + 1.35;
+  let laneY = LANE_Y;
+  if (state.lanes.length) {
+    laneY = state.lanes[0].y;
+    for (const lane of state.lanes) if (lane.y < laneY) laneY = lane.y;
+  }
+  const yFloor = laneY - 0.14;
+  const yTop = laneY + 1.7;
   buildGrid(group, yFloor);
   buildFloorTraces(group, yFloor);
 
@@ -1102,7 +1110,7 @@ function layoutWorld() {
       laneId: lane.id,
       seed: lane.seed,
       x: timeToX(ev.ts_unix),
-      y: lane.y,
+      y: lane.y + 0.07,
       z: lane.z,
       r: color.r * gain,
       g: color.g * gain,
@@ -1180,11 +1188,10 @@ function buildLanes(events) {
   for (const key of busKeys) {
     lanes.push(makeLane("b:" + key, { id: key, name: key }, byBus.get(key), true));
   }
-  const gap = 1.28;
   const mid = (lanes.length - 1) / 2;
   lanes.forEach((lane, i) => {
-    lane.y = (i - mid) * gap;
-    lane.z = (i - mid) * 0.52;
+    lane.y = LANE_Y;
+    lane.z = (i - mid) * LANE_GAP;
     lane.seed = i * 1.63 + 0.35;
   });
   return lanes;
@@ -1293,8 +1300,7 @@ function separateOverlaps(nodes) {
     list.sort((a, b) => a.x - b.x);
     for (let i = 1; i < list.length; i++) {
       if (Math.abs(list[i].x - list[i - 1].x) < 0.08) {
-        list[i].y += 0.14 * ((i % 3) - 1);
-        list[i].z += 0.06;
+        list[i].z += 0.04 * ((i % 5) - 2);
       }
     }
   }
@@ -1316,7 +1322,7 @@ function laneSamples(lane) {
     heats[i] = h;
     if (h > maxH) maxH = h;
   }
-  const baseW = lane.system ? 0.05 : 0.075;
+  const baseW = lane.system ? 0.07 : 0.1;
   const samples = [];
   for (let i = 0; i < n; i++) {
     const u = i / (n - 1);
@@ -1325,7 +1331,7 @@ function laneSamples(lane) {
       x: timeToX(lane.a + (lane.b - lane.a) * u),
       y: lane.y,
       z: lane.z,
-      width: baseW + heat * (lane.system ? 0.08 : 0.13),
+      width: baseW + heat * (lane.system ? 0.09 : 0.14),
       heat
     });
   }
@@ -1339,8 +1345,6 @@ function ribbonGeometry(samples, widthMul) {
   const uv = new Float32Array(n * 2 * 2);
   const heat = new Float32Array(n * 2);
   const idx = [];
-  const sideY = 0.94;
-  const sideZ = 0.34;
   for (let i = 0; i < n; i++) {
     const s = samples[i];
     const w = s.width * mul;
@@ -1348,8 +1352,8 @@ function ribbonGeometry(samples, widthMul) {
       const sign = k === 0 ? -1 : 1;
       const vi = i * 2 + k;
       pos[vi * 3] = s.x;
-      pos[vi * 3 + 1] = s.y + sideY * w * sign;
-      pos[vi * 3 + 2] = s.z + sideZ * w * sign;
+      pos[vi * 3 + 1] = s.y;
+      pos[vi * 3 + 2] = s.z + w * sign;
       uv[vi * 2] = i / (n - 1);
       uv[vi * 2 + 1] = k;
       heat[vi] = s.heat;
@@ -1521,7 +1525,7 @@ function buildArcs(group) {
     const c = {
       x: (a.x + b.x) / 2,
       y: Math.max(a.y, b.y) + lift,
-      z: (a.z + b.z) / 2 + 0.95
+      z: (a.z + b.z) / 2
     };
     const pts = [];
     for (let i = 0; i <= SEG; i++) {
@@ -1659,10 +1663,11 @@ function buildParticles(group, yFloor, yTop) {
   const rand = mulberry32(0x51ed);
   const x0 = -WORLD_X / 2 - 2;
   const x1 = WORLD_X / 2 + 2;
+  const spanZ = laneZBounds(1.4);
   for (let i = 0; i < count; i++) {
     pos[i * 3] = x0 + rand() * (x1 - x0);
-    pos[i * 3 + 1] = yFloor - 0.4 + rand() * (yTop - yFloor + 2.4);
-    pos[i * 3 + 2] = -4.5 + rand() * 9;
+    pos[i * 3 + 1] = yFloor + 0.05 + rand() * Math.max(0.7, yTop - yFloor);
+    pos[i * 3 + 2] = spanZ.z0 + rand() * (spanZ.z1 - spanZ.z0);
     phase[i] = rand();
   }
   const geo = new THREE.BufferGeometry();
@@ -1713,8 +1718,9 @@ function buildGrid(group, yFloor) {
   const pos = [];
   const col = [];
   const ticks = [];
-  const z0 = -3.4;
-  const z1 = 3.4;
+  const spanZ = laneZBounds(1.2);
+  const z0 = spanZ.z0;
+  const z1 = spanZ.z1;
   const xMin = -WORLD_X / 2;
   const xMax = WORLD_X / 2;
   let guard = 0;
@@ -1831,6 +1837,22 @@ function buildPlayhead(group, yFloor, yTop) {
   view.contact = contact;
 }
 
+function laneZBounds(pad) {
+  const extra = pad == null ? 1.2 : pad;
+  if (!state.lanes.length) return { z0: -2.2, z1: 2.2 };
+  let z0 = Infinity;
+  let z1 = -Infinity;
+  for (const lane of state.lanes) {
+    if (lane.z < z0) z0 = lane.z;
+    if (lane.z > z1) z1 = lane.z;
+  }
+  if (!(z1 > z0)) {
+    z0 -= 1.2;
+    z1 += 1.2;
+  }
+  return { z0: z0 - extra, z1: z1 + extra };
+}
+
 function pushLine(pos, col, x1, y1, z1, x2, y2, z2, c) {
   pos.push(x1, y1, z1, x2, y2, z2);
   col.push(c[0], c[1], c[2], c[0], c[1], c[2]);
@@ -1902,98 +1924,194 @@ function layoutLabels() {
   if (!root || !camera) return;
   labelUsed = 0;
   const boxes = [];
-  const cands = [];
-  for (const lane of state.lanes) {
-    const x = Math.min(timeToX(lane.b), Math.max(timeToX(lane.a), shared.uPlayX.value));
-    const f = flowAt(x, lane.seed, view.time);
-    const s = toScreen(x, lane.y + f.y, lane.z + f.z);
-    if (!s) continue;
-    cands.push({
-      x: s.x + 8,
-      y: s.y - 14,
-      text: lane.name,
-      cls: state.selectedLane === lane.id ? "hot" : lane.system ? "dim" : "",
-      pri: state.selectedLane === lane.id ? 80 : lane.system ? 30 : 62
-    });
-  }
+  const fade = laneFade();
   const hover = state.hoverId ? state.nodeById.get(state.hoverId) : null;
   const selected = state.selected ? state.nodeById.get(state.selected) : null;
-  if (selected) {
-    const lab = nodeLabel(selected, "sel", 120);
-    if (lab) cands.push(lab);
-  }
+  const pins = [];
+  if (selected) pins.push({ node: selected, text: pinText(selected), cls: "sel", keep: true });
   if (hover && (!selected || hover.event.id !== selected.event.id)) {
-    const lab = nodeLabel(hover, "hot", 96);
-    if (lab) cands.push(lab);
+    pins.push({ node: hover, text: pinText(hover), cls: "hot", keep: true });
   }
-  let errors = 0;
+  const alerts = [];
   for (const node of state.nodes) {
-    if (!node.alert || errors > 5) continue;
+    if (!node.alert) continue;
     if (selected && node.event.id === selected.event.id) continue;
-    if (Math.abs(node.x - shared.uPlayX.value) > 6) continue;
-    const lab = nodeLabel(node, "err", 74);
-    if (lab) cands.push(lab);
-    errors += 1;
+    if (hover && node.event.id === hover.event.id) continue;
+    if (Math.abs(node.x - shared.uPlayX.value) > 8) continue;
+    alerts.push(node);
   }
-  if (state.ticks) {
-    for (const tick of state.ticks) {
-      if (!tick.major) continue;
-      const s = toScreen(tick.x, (state.yFloor || 0) + 0.5, 0);
-      if (!s) continue;
-      cands.push({
-        x: s.x - 18,
-        y: s.y + 2,
-        text: fmtClock(tick.t, false),
-        cls: "tick",
-        pri: 12
-      });
-    }
+  alerts.sort((a, b) => Math.abs(a.x - shared.uPlayX.value) - Math.abs(b.x - shared.uPlayX.value));
+  for (let i = 0; i < alerts.length && i < 6; i++) {
+    const node = alerts[i];
+    const warn = isWarnEvent(node.event);
+    pins.push({ node, text: warn ? "WARNING" : pinText(node), cls: warn ? "warn" : "err", keep: false });
   }
-  const head = toScreen(shared.uPlayX.value, (state.lanes.length ? Math.max(...state.lanes.map((l) => l.y)) : 0) + 0.9, 0);
-  if (head) {
-    cands.push({
-      x: head.x + 6,
-      y: head.y - 8,
-      text: fmtClock(state.play, true),
-      cls: "hot",
-      pri: 88
-    });
-  }
-  cands.sort((a, b) => (b && b.pri ? b.pri : 0) - (a && a.pri ? a.pri : 0));
-  for (const cand of cands) {
-    if (!cand || !cand.text) continue;
-    const box = measure(cand.text, cand.cls);
-    let y = cand.y;
+  for (const pin of pins) placeOnLane(pin.node, pin.text, pin.cls, 1, boxes, pin.keep);
+
+  const names = state.lanes.map((lane, i) => ({
+    lane,
+    i,
+    op: state.selectedLane === lane.id ? 1 : fade[i]
+  }));
+  names.sort((a, b) => b.op - a.op);
+  for (const item of names) {
+    const lane = item.lane;
+    const dir = laneDirScreen(lane);
+    const cls = state.selectedLane === lane.id ? "hot" : lane.system ? "dim" : "";
+    const box = measure(lane.name, cls);
     let placed = false;
-    for (let n = 0; n < 5; n++) {
-      if (y < 4 || cand.x < -20 || cand.x > stage.clientWidth - 4) break;
-      if (!overlaps(boxes, cand.x, y, box.w, box.h)) {
-        boxes.push({ x: cand.x, y, w: box.w, h: box.h });
-        drawLabel(cand.x, y, cand.text, cand.cls);
+    for (let step = 0; step < 4; step++) {
+      const p = laneNamePoint(lane, item.i, step);
+      const s = toScreen(p.x, p.y, p.z);
+      if (!s) continue;
+      const x = s.x + dir.x * 6;
+      const y = s.y + dir.y * 6;
+      if (!blocksLabel(boxes, x, y, box.w, box.h, dir)) {
+        rememberLabel(boxes, x, y, box.w, box.h, dir);
+        drawLabel(x, y, lane.name, cls, item.op, dir.ang);
         placed = true;
         break;
       }
-      y -= box.h + 3;
     }
-    if (!placed) {
-      /* loser hidden */
+    if (!placed && state.selectedLane === lane.id) {
+      const p = laneNamePoint(lane, item.i, 0);
+      const s = toScreen(p.x, p.y, p.z);
+      if (s) drawLabel(s.x + dir.x * 6, s.y + dir.y * 6, lane.name, cls, 1, dir.ang);
+    }
+  }
+
+  const axis = { x: 1, y: 0, ang: 0 };
+  if (state.ticks) {
+    for (const tick of state.ticks) {
+      if (!tick.major) continue;
+      const s = toScreen(tick.x, (state.yFloor || 0) + 0.35, 0);
+      if (!s) continue;
+      const text = fmtClock(tick.t, false);
+      const box = measure(text, "tick");
+      const x = s.x - box.w * 0.5;
+      const y = s.y + 8;
+      if (blocksLabel(boxes, x, y, box.w, box.h, axis)) continue;
+      rememberLabel(boxes, x, y, box.w, box.h, axis);
+      drawLabel(x, y, text, "tick", 0.85, 0);
+    }
+  }
+  const headY = (state.lanes.length ? state.lanes[0].y : 0) + 1.15;
+  const head = toScreen(shared.uPlayX.value, headY, 0);
+  if (head) {
+    const text = fmtClock(state.play, true);
+    const box = measure(text, "hot");
+    const x = head.x + 6;
+    const y = head.y;
+    if (!blocksLabel(boxes, x, y, box.w, box.h, axis)) {
+      rememberLabel(boxes, x, y, box.w, box.h, axis);
+      drawLabel(x, y, text, "hot", 1, 0);
     }
   }
   for (let i = labelUsed; i < labelPool.length; i++) labelPool[i].style.display = "none";
 }
 
-function nodeLabel(node, cls, pri) {
-  const s = toScreen(node.x, node.ry || node.y, node.rz || node.z);
-  if (!s) return null;
+function isWarnEvent(ev) {
+  return !!(ev && (ev.kind === "warning" || ev.level === "WARNING"));
+}
+
+function pinText(node) {
   const kind = String(node.event.kind || "event").replace(/_/g, " ");
   const tool = node.event.tool_name ? " · " + node.event.tool_name : "";
-  return {
-    x: s.x + 10,
-    y: s.y - 18,
-    text: (kind + tool).toUpperCase(),
-    cls,
-    pri
-  };
+  return (kind + tool).toUpperCase();
+}
+
+function laneFade() {
+  const cam = camera.position;
+  const dist = state.lanes.map((lane) => {
+    const x = (timeToX(lane.a) + timeToX(lane.b)) * 0.5;
+    return Math.hypot(x - cam.x, lane.y - cam.y, lane.z - cam.z);
+  });
+  let min = Infinity;
+  let max = -Infinity;
+  for (const d of dist) {
+    if (d < min) min = d;
+    if (d > max) max = d;
+  }
+  const span = Math.max(0.001, max - min);
+  return dist.map((d) => 1 - ((d - min) / span) * 0.62);
+}
+
+function laneNamePoint(lane, index, step) {
+  const x0 = timeToX(lane.a);
+  const x1 = timeToX(lane.b);
+  const room = Math.max(0.3, x1 - x0);
+  const stride = Math.min(1.7, room * 0.16);
+  const x = Math.min(x1 - room * 0.02, x0 + ((index % 3) + step) * stride);
+  return { x, y: lane.y, z: lane.z };
+}
+
+function laneDirScreen(lane) {
+  const x0 = timeToX(lane.a);
+  const x1 = timeToX(lane.b);
+  const span = Math.max(0.4, (x1 - x0) * 0.12);
+  const a = toScreen(x0, lane.y, lane.z);
+  const b = toScreen(Math.min(x1, x0 + span), lane.y, lane.z);
+  if (!a || !b) return { x: 1, y: 0, ang: 0 };
+  let dx = b.x - a.x;
+  let dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  dx /= len;
+  dy /= len;
+  let ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  if (ang > 90 || ang < -90) {
+    ang += ang > 0 ? -180 : 180;
+    dx = -dx;
+    dy = -dy;
+  }
+  return { x: dx, y: dy, ang };
+}
+
+function placeOnLane(node, text, cls, opacity, boxes, keep) {
+  const lane = state.lanes.find((l) => l.id === node.laneId) || null;
+  const dir = lane ? laneDirScreen(lane) : { x: 1, y: 0, ang: 0 };
+  const box = measure(text, cls);
+  const s = toScreen(node.x, node.ry || node.y, node.rz || node.z);
+  if (!s) return false;
+  for (let step = 0; step < 4; step++) {
+    const along = 8 + step * (box.h + 5);
+    const x = s.x + dir.x * along;
+    const y = s.y + dir.y * along;
+    if (!blocksLabel(boxes, x, y, box.w, box.h, dir)) {
+      rememberLabel(boxes, x, y, box.w, box.h, dir);
+      drawLabel(x, y, text, cls, opacity, dir.ang);
+      return true;
+    }
+  }
+  if (keep) drawLabel(s.x + dir.x * 8, s.y + dir.y * 8, text, cls, opacity, dir.ang);
+  return keep;
+}
+
+function rememberLabel(boxes, x, y, w, h, dir) {
+  boxes.push({
+    x: x + dir.x * w * 0.5,
+    y: y + dir.y * w * 0.5,
+    w,
+    h
+  });
+}
+
+function blocksLabel(boxes, x, y, w, h, dir) {
+  const cx = x + dir.x * w * 0.5;
+  const cy = y + dir.y * w * 0.5;
+  const hudTop = 52;
+  const hudBottom = stage.clientHeight - 26;
+  if (cy < hudTop || cy > hudBottom) return true;
+  if (cx < 2 || cx > stage.clientWidth - 4) return true;
+  const px = -dir.y;
+  const py = dir.x;
+  for (const b of boxes) {
+    const dx = cx - b.x;
+    const dy = cy - b.y;
+    const along = Math.abs(dx * dir.x + dy * dir.y);
+    const perp = Math.abs(dx * px + dy * py);
+    if (along < (w + b.w) * 0.5 + 5 && perp < (h + b.h) * 0.5 + 3) return true;
+  }
+  return false;
 }
 
 function measure(text, cls) {
@@ -2003,17 +2121,7 @@ function measure(text, cls) {
   };
 }
 
-function overlaps(boxes, x, y, w, h) {
-  const hudTop = 52;
-  const hudBottom = stage.clientHeight - 26;
-  if (y < hudTop || y + h > hudBottom) return true;
-  for (const b of boxes) {
-    if (x < b.x + b.w + 3 && x + w + 3 > b.x && y < b.y + b.h + 2 && y + h + 2 > b.y) return true;
-  }
-  return false;
-}
-
-function drawLabel(x, y, text, cls) {
+function drawLabel(x, y, text, cls, opacity, rotDeg) {
   const root = $("labels");
   let el = labelPool[labelUsed];
   if (!el) {
@@ -2025,8 +2133,13 @@ function drawLabel(x, y, text, cls) {
   const name = "tag" + (cls ? " " + cls : "");
   if (el.className !== name) el.className = name;
   if (el.textContent !== text) el.textContent = text;
+  const h = cls === "sel" ? 18 : 13;
+  const rot = rotDeg || 0;
+  const fade = opacity == null ? 1 : opacity;
   el.style.display = "block";
-  el.style.transform = "translate3d(" + x.toFixed(1) + "px," + y.toFixed(1) + "px,0)";
+  el.style.transformOrigin = "0 50%";
+  el.style.transform = "translate3d(" + x.toFixed(1) + "px," + (y - h * 0.5).toFixed(1) + "px,0) rotate(" + rot.toFixed(2) + "deg)";
+  el.style.opacity = fade >= 0.995 ? "1" : Math.max(0.28, fade).toFixed(2);
   labelUsed += 1;
 }
 
@@ -2845,7 +2958,7 @@ function frameBrush() {
   state.flying = true;
   state.desired.target.set(cx, state.centerY, 0);
   state.desired.radius = THREE.MathUtils.clamp(dist, 6, 78);
-  state.desired.phi = 0.48;
+  state.desired.phi = 0.72;
 }
 
 function selectEvent(id) {
@@ -2867,7 +2980,7 @@ function selectEvent(id) {
     const f = flowAt(node.x, node.seed, view.time);
     state.desired.target.set(node.x, node.y + f.y, node.z + f.z);
     state.desired.radius = 7.2;
-    state.desired.phi = 0.4;
+    state.desired.phi = 0.64;
     state.desired.theta = state.theta + 0.22;
   }
   renderInspector();
@@ -2891,7 +3004,7 @@ function selectLane(id) {
   const x1 = timeToX(lane.b);
   state.desired.target.set((x0 + x1) / 2, lane.y, lane.z);
   state.desired.radius = THREE.MathUtils.clamp(Math.max(2.2, x1 - x0) * 0.9 + 3, 6.5, 30);
-  state.desired.phi = 0.44;
+  state.desired.phi = 0.7;
   state.desired.theta = state.theta + 0.2;
   state.play = clamp(lane.t0, state.brush0, state.brush1);
   state.playing = true;

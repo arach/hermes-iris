@@ -2,7 +2,7 @@
 
 Iris turns Hermes sessions and agent logs into a navigable 3D scene: follow an agent's timeline, see delegation hand-offs as links, inspect a failed tool call, and preview the artifact beside its event. The main page works with bundled redacted sample data; live mode reads recent local Hermes activity through the plugin API.
 
-![Iris screenshot — replace before publication](docs/screenshot.png)
+![Iris inside the Hermes dashboard: 18 sessions, 427 events, delegation arcs](docs/screenshot.png)
 
 ## Features
 

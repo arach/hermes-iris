@@ -10,5 +10,5 @@ Validation note: Hermes 0.23.1's security heuristic flags `inline_shell_exec` in
 
 ## Screenshots
 
-- [ ] Add `docs/screenshot.png` showing the 3D scene, delegation arrows and inspector before publication.
+![Iris in the Hermes dashboard](https://raw.githubusercontent.com/arach/hermes-iris/main/docs/screenshot.png)
 - [ ] Add a second image of a failed tool event and artifact preview if useful.

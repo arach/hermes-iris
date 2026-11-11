@@ -1,6 +1,6 @@
 name: iris
-repo: https://github.com/example/hermes-iris
-sha: REPLACE_WITH_40_CHAR_SHA
+repo: https://github.com/arach/hermes-iris
+sha: f0bb90b3312ac70af53ddcba8cde0b9add56a138
 title: Iris
 description: >-
   Iris is a 3D visualizer for Hermes session transcripts and agent logs. A
@@ -13,7 +13,6 @@ requires_hermes: ">=0.23.1"
 version: "0.1.0"
 readme: true
 known_issues:
-  - "repo and sha are placeholders. Replace both with a public repository and its real 40-character commit SHA before catalog submission."
   - "Under plugins.isolation: host the hermes iris terminal command is skipped. The /iris slash command still works. The dashboard page does not depend on that command."
   - "The Desktop pane stays off until you enable it in Capabilities, then Plugins. Enabling the Python plugin does not enable the Desktop pane."
 capabilities:

@@ -17,10 +17,10 @@
     --faint: #667068;
     --line: rgba(232, 236, 239, 0.08);
     --line-strong: rgba(232, 236, 239, 0.14);
-    --accent: #5ee0a0;
-    --accent-dim: rgba(94, 224, 160, 0.14);
+    --accent: #ffc47a;
+    --accent-dim: rgba(255, 196, 122, 0.14);
     --red: #ff5c5c;
-    --amber: #e6a35c;
+    --amber: #f5bd7e;
     --tan: #b7a48c;
     --panel: #08090b;
   }
@@ -47,7 +47,7 @@
     color: var(--dim);
     cursor: pointer;
   }
-  button:hover { border-color: rgba(94, 224, 160, 0.55); color: #e7fff4; }
+  button:hover { border-color: rgba(255, 196, 122, 0.55); color: #fff1df; }
   button.on { color: #07110c; background: var(--accent); border-color: var(--accent); }
   button:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
   [hidden] { display: none !important; }
@@ -84,8 +84,8 @@
   .mode {
     font-size: 9px;
     letter-spacing: 0.16em;
-    border: 1px solid rgba(94, 224, 160, 0.45);
-    color: #e7fff4;
+    border: 1px solid rgba(255, 196, 122, 0.45);
+    color: #fff1df;
     padding: 3px 8px;
     background: var(--accent-dim);
   }
@@ -109,7 +109,7 @@
     text-transform: uppercase;
     white-space: nowrap;
   }
-  .pill.accent { color: var(--accent); border-color: rgba(94, 224, 160, 0.35); }
+  .pill.accent { color: var(--accent); border-color: rgba(255, 196, 122, 0.35); }
   .clock {
     color: #d5ddd8;
     letter-spacing: 0.08em;
@@ -265,9 +265,9 @@
   }
   .sess .id { color: #d7ddd8; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sess .n { color: var(--dim); text-align: right; font-variant-numeric: tabular-nums; font-size: 9px; letter-spacing: 0.06em; line-height: 1.35; }
-  .sess.sel { border-left-color: var(--accent); background: rgba(94, 224, 160, 0.06); }
+  .sess.sel { border-left-color: var(--accent); background: rgba(255, 196, 122, 0.06); }
   .sess.future, .tool.future, .alert.future { opacity: 0.38; }
-  .sess.hot, .tool.hot { background: rgba(94, 224, 160, 0.07); }
+  .sess.hot, .tool.hot { background: rgba(255, 196, 122, 0.07); }
   .dot {
     width: 6px;
     height: 6px;
@@ -280,7 +280,7 @@
   .tool { display: block; padding: 4px 2px 6px; }
   .tool .name { color: #d7ddd8; letter-spacing: 0.04em; }
   .tool .dur { color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: 0.06em; }
-  .tool.sel { background: rgba(94, 224, 160, 0.08); }
+  .tool.sel { background: rgba(255, 196, 122, 0.08); }
   .nominal { display: flex; gap: 8px; align-items: center; padding: 4px 0; color: var(--ink); }
   .nominal b { display: block; letter-spacing: 0.14em; font-weight: 500; font-size: 10px; }
   .alert { display: block; border-bottom: 1px solid rgba(255, 255, 255, 0.04); padding: 4px 2px; }
@@ -301,7 +301,7 @@
   .log-line.err, .log-line.err .ts, .log-line.err .lvl, .log-line.err .msg { color: #ff9a9a; }
   .log-line.warn, .log-line.warn .msg { color: #e6b57a; }
   .log-line.tool .msg { color: #9ee0c0; }
-  .log-line.now { background: rgba(94, 224, 160, 0.08); }
+  .log-line.now { background: rgba(255, 196, 122, 0.08); }
   .log-line.sel { box-shadow: inset 2px 0 0 var(--accent); }
   #spark svg { width: 100%; height: 42px; display: block; }
   .spark-scale {
@@ -343,6 +343,26 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
   }
+  .zoom-pad {
+    position: absolute;
+    right: 10px;
+    bottom: 30px;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .zoom-pad button {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    letter-spacing: 0;
+    text-transform: none;
+    text-align: center;
+    font-size: 13px;
+    line-height: 20px;
+    background: rgba(7, 8, 9, 0.86);
+  }
   .stage-meta {
     color: #c5cdc8;
     margin-top: 3px;
@@ -353,11 +373,11 @@
   .legend { display: flex; gap: 10px; color: var(--dim); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; }
   .legend span { display: inline-flex; align-items: center; gap: 4px; }
   .swatch { width: 6px; height: 6px; display: inline-block; }
-  .swatch.session { background: #8affe0; box-shadow: 0 0 6px #8affe0; }
-  .swatch.bus { background: #1f6e52; }
+  .swatch.session { background: #ffe0b0; box-shadow: 0 0 6px #ffe0b0; }
+  .swatch.bus { background: #a8702e; }
   .swatch.tool { background: #e9fff6; }
   .swatch.err { background: #ff4d4d; box-shadow: 0 0 6px #ff4d4d; }
-  .swatch.play { background: #f4fff9; }
+  .swatch.play { background: #fff7ec; }
   #labels { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 2; }
   .tag {
     position: absolute;
@@ -371,14 +391,14 @@
     white-space: nowrap;
     padding: 1px 4px;
   }
-  .tag.hot { color: #f3fff9; }
+  .tag.hot { color: #fff6ea; }
   .tag.dim { color: #8aa396; }
   .tag.err { color: #ffb4b4; }
   .tag.tick { color: #667068; letter-spacing: 0.06em; }
   .tag.sel {
-    color: #f4fff9;
+    color: #fff7ec;
     background: rgba(7, 8, 9, 0.72);
-    border: 1px solid rgba(94, 224, 160, 0.5);
+    border: 1px solid rgba(255, 196, 122, 0.5);
   }
   #inspector {
     position: absolute;
@@ -458,7 +478,7 @@
     inset: 10px;
     z-index: 30;
     background: rgba(7, 8, 9, 0.78);
-    border: 1px dashed rgba(94, 224, 160, 0.65);
+    border: 1px dashed rgba(255, 196, 122, 0.65);
     display: grid;
     place-items: center;
     letter-spacing: 0.2em;
@@ -518,7 +538,7 @@
           <button type="button" data-speed="2">2×</button>
           <button type="button" data-speed="4">4×</button>
           <button type="button" data-speed="8">8×</button>
-          <button type="button" id="btn-orbit" class="on">Orbit</button>
+          <button type="button" id="btn-orbit">Orbit</button>
         </div>
         <div class="meter play-meter"><span id="play-meter"></span></div>
       </section>
@@ -557,6 +577,11 @@
       <div class="stage-foot">
         <div id="hint">Drag orbit  ·  scroll dolly  ·  click fly  ·  space play</div>
         <div id="fps">— FPS</div>
+      </div>
+      <div class="zoom-pad">
+        <button type="button" id="btn-zoom-in" title="Zoom in">+</button>
+        <button type="button" id="btn-zoom-out" title="Zoom out">−</button>
+        <button type="button" id="btn-zoom-fit" title="Fit all">⤢</button>
       </div>
       <div id="labels"></div>
       <div id="inspector" hidden></div>
@@ -628,14 +653,19 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
 const WORLD_X = 36;
+const VIEW_THETA = 0.36;
+const VIEW_PHI = 0.32;
 const MAX_NODES = 2800;
 const MAX_ARCS = 400;
 const MAX_LANES = 26;
 const FOG_D = 0.02;
 const FLOW = { yAmp: 0.058, zAmp: 0.042, yFreq: 0.62, zFreq: 0.4, ySpeed: 0.33, zSpeed: 0.2 };
 const BUS_ORDER = ["agent", "tools", "cli", "gateway", "gui", "cron", "other", "system"];
-const SESSION_COLORS = ["#8affe0", "#5ee0a0", "#c8ffe8", "#7ddec4", "#b6fff0"];
+const SESSION_COLORS = ["#ffe0b0", "#ffc47a", "#c8ffe8", "#7ddec4", "#b6fff0"];
 const HINT = "Drag orbit  ·  scroll dolly  ·  click fly  ·  space play";
+const DOLLY_MIN = 3.4;
+const DOLLY_MAX = 90;
+const DOLLY_STEP = 0.82;
 const SAMPLE_URLS = ["./sample-events.json", "./dashboard/sample-events.json", "./sample/events.json"];
 const SECRET_PATTERNS = [
   /\b(?:sk|rk|pk|ak)-[A-Za-z0-9_\-]{8,}/gi,
@@ -682,21 +712,21 @@ const state = {
   selected: null,
   selectedLane: null,
   hoverId: null,
-  modeOrbit: "auto",
+  modeOrbit: "off",
   dragging: false,
   flying: false,
   lastInteract: 0,
   centerY: 0,
   fitRadius: 24,
   nodeNote: "",
-  theta: 0.62,
-  phi: 0.5,
-  radius: 26,
+  theta: VIEW_THETA,
+  phi: VIEW_PHI,
+  radius: 42,
   target: new THREE.Vector3(0, 0, 0),
   desired: {
-    theta: 0.62,
-    phi: 0.5,
-    radius: 26,
+    theta: VIEW_THETA,
+    phi: VIEW_PHI,
+    radius: 42,
     target: new THREE.Vector3(0, 0, 0)
   }
 };
@@ -783,7 +813,7 @@ function initThree() {
   ring = new THREE.Mesh(
     new THREE.RingGeometry(0.16, 0.205, 40),
     new THREE.MeshBasicMaterial({
-      color: 0xeafff6,
+      color: 0xfff0dc,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.95,
@@ -1092,7 +1122,7 @@ function layoutWorld() {
     const lane = state.lanes[i];
     const samples = laneSamples(lane);
     const geo = ribbonGeometry(samples);
-    const color = lane.system ? "#1f6e52" : SESSION_COLORS[i % SESSION_COLORS.length];
+    const color = lane.system ? "#a8702e" : SESSION_COLORS[i % SESSION_COLORS.length];
     const mat = makeRibbonMaterial(color, lane.system ? 0.5 : 1);
     mat.uniforms.uSeed.value = lane.seed;
     lane.mat = mat;
@@ -1545,7 +1575,7 @@ function buildArcs(group) {
     uniforms: {
       uTime: shared.uTime,
       uPlayX: shared.uPlayX,
-      uColor: { value: new THREE.Color("#d8fff0") }
+      uColor: { value: new THREE.Color("#ffe8c8") }
     },
     vertexShader: `
       attribute float aSeed;
@@ -1725,7 +1755,7 @@ function buildFloorTraces(group, yFloor) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
   const mat = new THREE.LineBasicMaterial({
-    color: 0x1c6b4c,
+    color: 0xa8702e,
     transparent: true,
     opacity: 0.55
   });
@@ -1734,24 +1764,41 @@ function buildFloorTraces(group, yFloor) {
 
 function buildPlayhead(group, yFloor, yTop) {
   const height = Math.max(2, yTop - yFloor);
-  const midY = (yFloor + yTop) / 2;
-  const depth = 7.2;
+  const y1 = yFloor + height;
+  let z0 = 0;
+  let z1 = 0;
+  if (state.lanes.length) {
+    z0 = Infinity;
+    z1 = -Infinity;
+    for (const lane of state.lanes) {
+      if (lane.z < z0) z0 = lane.z;
+      if (lane.z > z1) z1 = lane.z;
+    }
+  }
+  z0 -= 0.65;
+  z1 += 0.65;
   const holder = new THREE.Group();
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute([
+    0, yFloor, z0,
+    0, yFloor, z1,
+    0, y1, z1,
+    0, y1, z0
+  ], 3));
+  geo.setIndex([0, 1, 2, 0, 2, 3]);
   const plane = new THREE.Mesh(
-    new THREE.PlaneGeometry(1, 1),
+    geo,
     new THREE.MeshBasicMaterial({
-      color: 0x9dffd0,
+      color: 0xffd9a0,
       transparent: true,
-      opacity: 0.07,
+      opacity: 0.045,
       side: THREE.DoubleSide,
       depthWrite: false,
       toneMapped: false
     })
   );
-  plane.rotation.y = Math.PI / 2;
-  plane.scale.set(depth, height, 1);
-  plane.position.set(0, midY, 0);
   plane.renderOrder = 6;
+  plane.frustumCulled = false;
   holder.add(plane);
   const coreGeo = new THREE.BufferGeometry().setFromPoints([
     new THREE.Vector3(0, yFloor, 0),
@@ -1759,14 +1806,14 @@ function buildPlayhead(group, yFloor, yTop) {
   ]);
   const core = new THREE.Line(
     coreGeo,
-    new THREE.LineBasicMaterial({ color: 0xf4fff9, transparent: true, opacity: 0.95, toneMapped: false })
+    new THREE.LineBasicMaterial({ color: 0xfff7ec, transparent: true, opacity: 0.95, toneMapped: false })
   );
   core.renderOrder = 7;
   holder.add(core);
   const contact = new THREE.Mesh(
     new THREE.RingGeometry(0.1, 0.2, 28),
     new THREE.MeshBasicMaterial({
-      color: 0xd8fff0,
+      color: 0xffe8c8,
       side: THREE.DoubleSide,
       transparent: true,
       opacity: 0.85,
@@ -1798,17 +1845,17 @@ function tickStep(span) {
 
 function eventColor(ev) {
   if (ev.level === "ERROR" || ev.level === "CRITICAL" || ev.kind === "error") return new THREE.Color("#ff4d4d");
-  if (ev.level === "WARNING" || ev.kind === "warning") return new THREE.Color("#e6a35c");
+  if (ev.level === "WARNING" || ev.kind === "warning") return new THREE.Color("#f5bd7e");
   const map = {
-    tool_call: "#f3fff9",
+    tool_call: "#fff6ea",
     tool_result: "#b8ffe2",
     api_call: "#ddd4c6",
     user: "#f6f1e6",
     assistant: "#d4ffe9",
     session_start: "#ffffff",
     session_end: "#c5d2cb",
-    plugin: "#8fd0b4",
-    mcp: "#8fd0b4",
+    plugin: "#ecc28e",
+    mcp: "#ecc28e",
     turn_start: "#b7ebd2",
     turn_end: "#8ecfb4",
     inbound: "#9dccb8",
@@ -2026,8 +2073,8 @@ function show(doc) {
   state.brush1 = state.t1;
   state.play = state.t0;
   state.playing = true;
-  state.modeOrbit = "auto";
-  $("btn-orbit").classList.add("on");
+  state.modeOrbit = "off";
+  $("btn-orbit").classList.remove("on");
   empty.hidden = true;
   setHint(state.truncated ? state.truncated + " older events dropped." : HINT, false);
   try {
@@ -2059,11 +2106,89 @@ function domainOf(events) {
   return [t0 - pad, t1 + pad];
 }
 
+function laneFrame() {
+  let x0 = -WORLD_X / 2;
+  let x1 = WORLD_X / 2;
+  let y0 = (state.yFloor || 0) - 0.3;
+  let y1 = (state.centerY || 0) + 2;
+  let z0 = -3.2;
+  let z1 = 3.2;
+  if (state.lanes.length) {
+    x0 = Infinity;
+    x1 = -Infinity;
+    y0 = Infinity;
+    y1 = -Infinity;
+    z0 = Infinity;
+    z1 = -Infinity;
+    for (const lane of state.lanes) {
+      x0 = Math.min(x0, timeToX(lane.a));
+      x1 = Math.max(x1, timeToX(lane.b));
+      y0 = Math.min(y0, lane.y);
+      y1 = Math.max(y1, lane.y);
+      z0 = Math.min(z0, lane.z);
+      z1 = Math.max(z1, lane.z);
+    }
+    x0 -= 1.4;
+    x1 += 1.4;
+    y0 = Math.min(y0, state.yFloor || y0) - 0.45;
+    y1 += 1.35;
+    z0 -= 0.9;
+    z1 += 0.9;
+  }
+  return { x0, x1, y0, y1, z0, z1 };
+}
+
+function radiusToFit(b, theta, phi) {
+  const aspect = camera && camera.aspect > 0.25 ? camera.aspect : 1.25;
+  const tanV = Math.tan(((camera ? camera.fov : 38) * Math.PI) / 180 / 2);
+  const tanH = tanV * aspect;
+  const cp = Math.cos(phi);
+  const zx = cp * Math.sin(theta);
+  const zy = Math.sin(phi);
+  const zz = cp * Math.cos(theta);
+  let xx = 0;
+  let xy = -zz;
+  let xz = zy;
+  const xl = Math.hypot(xx, xy, xz) || 1;
+  xx /= xl;
+  xy /= xl;
+  xz /= xl;
+  const yx = zy * xz - zz * xy;
+  const yy = zz * xx - zx * xz;
+  const yz = zx * xy - zy * xx;
+  const cx = (b.x0 + b.x1) / 2;
+  const cy = (b.y0 + b.y1) / 2;
+  const cz = (b.z0 + b.z1) / 2;
+  let lo = 6;
+  let hi = 96;
+  for (let n = 0; n < 16; n++) {
+    const radius = (lo + hi) / 2;
+    let ok = true;
+    for (const x of [b.x0, b.x1]) {
+      for (const y of [b.y0, b.y1]) {
+        for (const z of [b.z0, b.z1]) {
+          const vx = x - cx - radius * zx;
+          const vy = y - cy - radius * zy;
+          const vz = z - cz - radius * zz;
+          const viewX = vx * xx + vy * xy + vz * xz;
+          const viewY = vx * yx + vy * yy + vz * yz;
+          const depth = -(vx * zx + vy * zy + vz * zz);
+          if (depth < 1 || Math.abs(viewX / depth) > tanH * 0.86 || Math.abs(viewY / depth) > tanV * 0.86) ok = false;
+        }
+      }
+    }
+    if (ok) hi = radius;
+    else lo = radius;
+  }
+  return THREE.MathUtils.clamp(hi, 8, 90);
+}
+
 function fitCamera(immediate) {
-  state.desired.target.set(0, state.centerY, 0);
-  state.desired.radius = state.fitRadius;
-  state.desired.phi = 0.5;
-  state.desired.theta = 0.62;
+  const b = laneFrame();
+  state.desired.target.set((b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2, (b.z0 + b.z1) / 2);
+  state.desired.radius = radiusToFit(b, VIEW_THETA, VIEW_PHI);
+  state.desired.phi = VIEW_PHI;
+  state.desired.theta = VIEW_THETA;
   state.flying = !immediate;
   if (immediate) {
     state.target.copy(state.desired.target);
@@ -2192,7 +2317,7 @@ function renderKinds() {
   for (const kind of kinds) {
     const off = state.offKind.has(kind);
     const n = counts.get(kind);
-    const color = kind === "error" ? "#ff5c5c" : kind === "warning" ? "#e6a35c" : "#5ee0a0";
+    const color = kind === "error" ? "#ff5c5c" : kind === "warning" ? "#f5bd7e" : "#ffc47a";
     html +=
       '<button type="button" class="kind' + (off ? " off" : "") + '" data-kind="' + esc(kind) + '">' +
       '<span class="name">' + esc(kind.replace(/_/g, " ")) + "</span>" +
@@ -2286,8 +2411,8 @@ function renderSpark() {
   const area = line + " L " + w.toFixed(1) + " " + h + " L 0 " + h + " Z";
   $("spark").innerHTML =
     '<svg viewBox="0 0 ' + w + " " + h + '" preserveAspectRatio="none" aria-hidden="true">' +
-    '<path d="' + area + '" fill="rgba(94,224,160,0.13)"></path>' +
-    '<path d="' + line + '" fill="none" stroke="#5ee0a0" stroke-width="1.4"></path></svg>' +
+    '<path d="' + area + '" fill="rgba(255, 196, 122,0.13)"></path>' +
+    '<path d="' + line + '" fill="none" stroke="#ffc47a" stroke-width="1.4"></path></svg>' +
     '<div class="spark-scale"><span>0</span><span>' + esc(label) + "</span><span>" + max + "</span></div>";
 }
 
@@ -2378,7 +2503,7 @@ function renderMesh() {
       const hot = state.selectedLane === "s:" + sid;
       svg +=
         '<path d="M 28 ' + y.toFixed(1) + " C 120 " + y.toFixed(1) + ", 160 " + y2.toFixed(1) + ", 248 " + y2.toFixed(1) +
-        '" fill="none" stroke="' + (hot ? "#d8fff0" : "#5ee0a0") + '" stroke-opacity="' + (hot ? "0.95" : "0.45") +
+        '" fill="none" stroke="' + (hot ? "#ffe8c8" : "#ffc47a") + '" stroke-opacity="' + (hot ? "0.95" : "0.45") +
         '" stroke-width="' + Math.min(2.4, 0.7 + n * 0.45) + '"></path>';
     });
   });
@@ -2387,13 +2512,13 @@ function renderMesh() {
     const hot = state.selectedLane === "s:" + sid;
     svg +=
       '<g data-sel="s:' + esc(sid) + '">' +
-      '<circle cx="28" cy="' + y.toFixed(1) + '" r="' + (hot ? 4.2 : 3.2) + '" fill="' + (hot ? "#eafff6" : "#5ee0a0") + '"></circle>' +
+      '<circle cx="28" cy="' + y.toFixed(1) + '" r="' + (hot ? 4.2 : 3.2) + '" fill="' + (hot ? "#eafff6" : "#ffc47a") + '"></circle>' +
       '<text x="38" y="' + (y + 3).toFixed(1) + '" fill="#c5cdc8" font-size="9">' + esc(shortId(sid)) + "</text></g>";
   });
   tools.forEach((tool, j) => {
     const y = yAt(j, tools.length);
     svg +=
-      '<g><circle cx="248" cy="' + y.toFixed(1) + '" r="3" fill="none" stroke="#5ee0a0"></circle>' +
+      '<g><circle cx="248" cy="' + y.toFixed(1) + '" r="3" fill="none" stroke="#ffc47a"></circle>' +
       '<text x="242" y="' + (y + 3).toFixed(1) + '" fill="#9aa89f" font-size="9" text-anchor="end">' + esc(clip(tool, 16)) + "</text></g>";
   });
   if (!tools.length) {
@@ -2570,7 +2695,7 @@ function drawTimeline() {
   g.fillStyle = "rgba(255,255,255,0.035)";
   g.fillRect(m.l, m.t, Math.max(0, bx0 - m.l), m.innerH);
   g.fillRect(bx1, m.t, Math.max(0, m.l + m.innerW - bx1), m.innerH);
-  g.fillStyle = "rgba(94,224,160,0.05)";
+  g.fillStyle = "rgba(255, 196, 122,0.05)";
   g.fillRect(bx0, m.t, Math.max(1, bx1 - bx0), m.innerH);
   const barW = m.innerW / N;
   for (let i = 0; i < N; i++) {
@@ -2578,7 +2703,7 @@ function drawTimeline() {
     const inside = t >= state.brush0 && t <= state.brush1;
     const h = (bins[i] / max) * (m.innerH - 4);
     const x = m.l + i * barW;
-    g.fillStyle = inside ? "rgba(94,224,160,0.8)" : "rgba(120,132,126,0.38)";
+    g.fillStyle = inside ? "rgba(255, 196, 122,0.8)" : "rgba(120,132,126,0.38)";
     g.fillRect(x, m.t + m.innerH - h, Math.max(1, barW - 1), h);
     if (err[i] > 0 && bins[i] > 0) {
       const eh = (Math.min(err[i], bins[i]) / max) * (m.innerH - 4);
@@ -2586,14 +2711,14 @@ function drawTimeline() {
       g.fillRect(x, m.t + m.innerH - eh, Math.max(1, barW - 1), eh);
     }
   }
-  g.strokeStyle = "rgba(94,224,160,0.95)";
+  g.strokeStyle = "rgba(255, 196, 122,0.95)";
   g.lineWidth = 1;
   g.strokeRect(bx0 + 0.5, m.t + 0.5, Math.max(2, bx1 - bx0), m.innerH - 1);
-  g.fillStyle = "#5ee0a0";
+  g.fillStyle = "#ffc47a";
   g.fillRect(bx0 - 1, m.t, 2, m.innerH);
   g.fillRect(bx1 - 1, m.t, 2, m.innerH);
   const px = xOf(state.play);
-  g.strokeStyle = "#f4fff9";
+  g.strokeStyle = "#fff7ec";
   g.beginPath();
   g.moveTo(px + 0.5, m.t - 1);
   g.lineTo(px + 0.5, m.t + m.innerH + 2);
@@ -2855,6 +2980,9 @@ function wire() {
       $("btn-orbit").classList.add("on");
     }
   });
+  $("btn-zoom-in").addEventListener("click", () => dolly(DOLLY_STEP));
+  $("btn-zoom-out").addEventListener("click", () => dolly(1 / DOLLY_STEP));
+  $("btn-zoom-fit").addEventListener("click", () => fitCamera(false));
   document.querySelectorAll("[data-speed]").forEach((btn) => {
     btn.addEventListener("click", () => setSpeed(Number(btn.dataset.speed)));
   });
@@ -2948,7 +3076,7 @@ function wire() {
     let dy = e.deltaY;
     if (e.deltaMode === 1) dy *= 16;
     if (e.deltaMode === 2) dy *= 120;
-    state.desired.radius = THREE.MathUtils.clamp(state.desired.radius * Math.exp(dy * 0.00115), 3.4, 90);
+    state.desired.radius = THREE.MathUtils.clamp(state.desired.radius * Math.exp(dy * 0.00115), DOLLY_MIN, DOLLY_MAX);
     state.radius = state.desired.radius;
   }, { passive: false });
   canvas.addEventListener("dblclick", (e) => {
@@ -2965,7 +3093,7 @@ function wire() {
   tl.addEventListener("pointercancel", () => { tlDrag = null; });
 
   window.addEventListener("keydown", (e) => {
-    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.isContentEditable)) return;
     if (e.key === " ") {
       e.preventDefault();
       state.playing = !state.playing;
@@ -2974,6 +3102,12 @@ function wire() {
       clearSelection();
     } else if (e.key === "f" || e.key === "F" || e.key === "0") {
       fitCamera(false);
+    } else if (!e.metaKey && !e.ctrlKey && !e.altKey && (e.key === "+" || e.key === "=")) {
+      e.preventDefault();
+      dolly(DOLLY_STEP);
+    } else if (!e.metaKey && !e.ctrlKey && !e.altKey && (e.key === "-" || e.key === "−")) {
+      e.preventDefault();
+      dolly(1 / DOLLY_STEP);
     } else if (e.key === "ArrowRight") {
       nudge(0.01);
     } else if (e.key === "ArrowLeft") {
@@ -3010,6 +3144,11 @@ function wire() {
     const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     readFile(file);
   });
+}
+
+function dolly(factor) {
+  markInteract();
+  state.desired.radius = THREE.MathUtils.clamp(state.desired.radius * factor, DOLLY_MIN, DOLLY_MAX);
 }
 
 function orbitBy(dx, dy) {
@@ -3128,7 +3267,7 @@ function loadInitial() {
   const embedded = http && location.pathname.indexOf("/dashboard-plugins/") !== -1;
   if (embedded) {
     loadLive().then(show).catch((err) => {
-      if (state.events.length) setHint("Live logs unavailable. Showing the loaded sample.", true);
+      if (state.events.length) setHint("SAMPLE DATA", false);
       else loadSample().then(show).catch(() => fail(err && err.message ? err.message : "Live logs did not load."));
     });
   } else if (!showed) {

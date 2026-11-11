@@ -363,6 +363,18 @@
     line-height: 20px;
     background: rgba(7, 8, 9, 0.86);
   }
+  .zoom-pad button#btn-zoom-fit.on {
+    width: auto;
+    min-width: 22px;
+    padding: 0 6px;
+    font-size: 8px;
+    letter-spacing: 0.14em;
+    line-height: 20px;
+    color: #1a120c;
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 12px rgba(255, 196, 122, 0.45);
+  }
   .stage-meta {
     color: #cdc6bc;
     margin-top: 3px;
@@ -582,7 +594,7 @@
       <div class="zoom-pad">
         <button type="button" id="btn-zoom-in" title="Zoom in">+</button>
         <button type="button" id="btn-zoom-out" title="Zoom out">−</button>
-        <button type="button" id="btn-zoom-fit" title="Fit all">⤢</button>
+        <button type="button" id="btn-zoom-fit" title="Fit all" aria-label="Fit all">⤢</button>
       </div>
       <div id="labels"></div>
       <div id="inspector" hidden></div>
@@ -718,6 +730,9 @@ const state = {
   modeOrbit: "off",
   dragging: false,
   flying: false,
+  focused: false,
+  prevPlay: null,
+  delegation: [],
   lastInteract: 0,
   centerY: 0,
   fitRadius: 24,
@@ -747,6 +762,7 @@ const view = {
   ticks: null,
   arcs: null,
   arcHot: null,
+  halos: null,
   ribbons: [],
   play: null,
   contact: null,
@@ -868,30 +884,21 @@ function frame(now) {
     state.play += dt * (span / 22) * state.speed;
     if (state.play > state.brush1) state.play = state.brush0;
   }
-  if (state.modeOrbit === "auto" && !state.dragging) state.desired.theta += dt * 0.085;
+  if (state.modeOrbit === "auto" && !state.dragging && !camFlight.active) state.desired.theta += dt * 0.085;
   if (state.modeOrbit === "idle" && !state.dragging && performance.now() - state.lastInteract > 12000) {
     state.modeOrbit = "auto";
     $("btn-orbit").classList.add("on");
   }
 
-  const k = 1 - Math.exp(-dt * (state.flying ? 3.1 : 7));
-  if (!state.dragging) {
-    state.theta = lerpAngle(state.theta, state.desired.theta, k);
-    state.phi += (state.desired.phi - state.phi) * k;
-    state.radius += (state.desired.radius - state.radius) * k;
-    state.target.lerp(state.desired.target, k);
-    if (state.flying) {
-      const settled = state.target.distanceTo(state.desired.target) < 0.05
-        && Math.abs(state.radius - state.desired.radius) < 0.08;
-      if (settled) state.flying = false;
-    }
-  }
+  stepCamera(dt);
+  syncFitButton();
   applyCamera();
   shared.uTime.value = view.time;
   shared.uPlayX.value = timeToX(state.play);
   shared.uX0.value = timeToX(state.brush0);
   shared.uX1.value = timeToX(state.brush1);
   updateGain();
+  pulsePassed(dt);
   updateNodes(view.time);
   updatePlayhead();
   updateRing();
@@ -944,6 +951,113 @@ function lerpAngle(a, b, t) {
   return a + d * t;
 }
 
+const camFlight = {
+  active: false,
+  t0: 0,
+  dur: 960,
+  fromT: new THREE.Vector3(),
+  toT: new THREE.Vector3(),
+  from: { theta: VIEW_THETA, phi: VIEW_PHI, radius: 42 },
+  to: { theta: VIEW_THETA, phi: VIEW_PHI, radius: 42 }
+};
+
+function smootherstep(t) {
+  const x = t < 0 ? 0 : t > 1 ? 1 : t;
+  return x * x * x * (x * (x * 6 - 15) + 10);
+}
+
+function beginFlight(ms) {
+  camFlight.active = true;
+  camFlight.t0 = performance.now();
+  camFlight.dur = ms || 960;
+  camFlight.from.theta = state.theta;
+  camFlight.from.phi = state.phi;
+  camFlight.from.radius = state.radius;
+  camFlight.fromT.copy(state.target);
+  camFlight.to.theta = state.desired.theta;
+  camFlight.to.phi = state.desired.phi;
+  camFlight.to.radius = state.desired.radius;
+  camFlight.toT.copy(state.desired.target);
+  state.flying = true;
+}
+
+function releaseCamera() {
+  camFlight.active = false;
+  state.flying = false;
+  state.desired.theta = state.theta;
+  state.desired.phi = state.phi;
+  state.desired.radius = state.radius;
+  state.desired.target.copy(state.target);
+}
+
+function stepCamera(dt) {
+  if (state.dragging) {
+    camFlight.active = false;
+    state.flying = false;
+    return;
+  }
+  if (camFlight.active) {
+    const u = (performance.now() - camFlight.t0) / camFlight.dur;
+    const e = smootherstep(u);
+    state.theta = lerpAngle(camFlight.from.theta, camFlight.to.theta, e);
+    state.phi = camFlight.from.phi + (camFlight.to.phi - camFlight.from.phi) * e;
+    state.radius = camFlight.from.radius + (camFlight.to.radius - camFlight.from.radius) * e;
+    state.target.lerpVectors(camFlight.fromT, camFlight.toT, e);
+    if (u >= 1) {
+      camFlight.active = false;
+      state.flying = false;
+      state.theta = camFlight.to.theta;
+      state.phi = camFlight.to.phi;
+      state.radius = camFlight.to.radius;
+      state.target.copy(camFlight.toT);
+      state.desired.theta = state.theta;
+      state.desired.phi = state.phi;
+      state.desired.radius = state.radius;
+      state.desired.target.copy(state.target);
+    }
+    return;
+  }
+  const k = 1 - Math.exp(-dt * 5.2);
+  state.theta = lerpAngle(state.theta, state.desired.theta, k);
+  state.phi += (state.desired.phi - state.phi) * k;
+  state.radius += (state.desired.radius - state.radius) * k;
+  state.target.lerp(state.desired.target, k);
+}
+
+function syncFitButton() {
+  const btn = $("btn-zoom-fit");
+  if (!btn) return;
+  const back = !!state.focused;
+  btn.classList.toggle("on", back);
+  const label = back ? "FIT" : "⤢";
+  if (btn.textContent !== label) btn.textContent = label;
+  const title = back ? "Fit all — back to the full scene" : "Fit all";
+  if (btn.title !== title) btn.title = title;
+  btn.setAttribute("aria-label", title);
+}
+
+function pulsePassed(dt) {
+  const play = state.play;
+  const prev = state.prevPlay;
+  state.prevPlay = play;
+  const span = Math.max(0.001, state.brush1 - state.brush0);
+  const step = prev == null ? 0 : play - prev;
+  const sweep = step > 0 && step < span * 0.06;
+  const decay = Math.exp(-dt * 1.65);
+  const nodes = state.nodes;
+  for (let i = 0; i < nodes.length; i++) {
+    const n = nodes[i];
+    if (sweep) {
+      const ts = n.event.ts_unix;
+      if (ts > prev && ts <= play) n.glow = 1;
+    }
+    if (n.glow) {
+      n.glow *= decay;
+      if (n.glow < 0.02) n.glow = 0;
+    }
+  }
+}
+
 function timeToX(t) {
   const span = Math.max(1e-6, state.t1 - state.t0);
   return ((t - state.t0) / span) * WORLD_X - WORLD_X / 2;
@@ -988,22 +1102,38 @@ function updateNodes(time) {
       n.rz = n.z + f.z;
       const dx = n.x - playX;
       const flare = Math.exp(-((((dx + 0.28) * 0.72) ** 2)));
-      let pulse = 1;
+      const pass = n.glow || 0;
+      const shimmer = pass * (0.78 + 0.22 * Math.sin(time * 8.2 + n.phase));
+      let pulse = 1 + shimmer * 0.42;
       if (n.alert) pulse += 0.42 * (0.5 + 0.5 * Math.sin(time * 5.4 + n.phase));
       const outside = n.x < x0 || n.x > x1;
       const sel = state.selected === n.event.id ? 1.22 : state.hoverId === n.event.id ? 1.12 : 1;
-      const sc = n.baseScale * (1 + flare * 0.7) * pulse * sel * (outside ? 0.7 : 1);
+      const sc = n.baseScale * (1 + flare * 0.55 + shimmer * 0.85) * pulse * sel * (outside ? 0.7 : 1);
       dummy.position.set(n.x, n.ry, n.rz);
       dummy.scale.setScalar(Math.max(0.012, sc));
       dummy.rotation.set(0, time * 0.25 + n.phase, 0);
       dummy.updateMatrix();
       view.nodes.setMatrixAt(i, dummy.matrix);
-      const boost = (0.7 + flare * 0.5) * (n.alert ? 0.85 + pulse * 0.35 : 1) * (outside ? 0.4 : 1);
+      const boost = (0.7 + flare * 0.4 + shimmer * 0.95) * (n.alert ? 0.85 + pulse * 0.35 : 1) * (outside ? 0.4 : 1);
       tmpColor.setRGB(Math.min(0.95, n.r * boost), Math.min(1.12, n.g * boost), Math.min(0.92, n.b * boost));
+      if (shimmer > 0.04) {
+        tmpColor.r = Math.min(1.35, tmpColor.r + shimmer * 0.35);
+        tmpColor.g = Math.min(1.25, tmpColor.g + shimmer * 0.22);
+      }
       if (state.selected === n.event.id) tmpColor.g = Math.min(1.2, tmpColor.g + 0.08);
       view.nodes.setColorAt(i, tmpColor);
+      if (view.halos) {
+        const hs = shimmer > 0.03 ? n.baseScale * (1.35 + shimmer * 2.1) : 0.0001;
+        dummy.position.set(n.x, n.ry, n.rz);
+        dummy.scale.setScalar(hs);
+        dummy.rotation.set(0, 0, 0);
+        dummy.updateMatrix();
+        view.halos.setMatrixAt(i, dummy.matrix);
+        tmpColor.setRGB(n.r * shimmer, n.g * shimmer, n.b * shimmer * 0.65);
+        view.halos.setColorAt(i, tmpColor);
+      }
       if (view.ticks) {
-        const th = n.tickH * (1 + flare * 1.7) * (outside ? 0.45 : 1);
+        const th = n.tickH * (1 + flare * 1.7 + shimmer * 1.15) * (outside ? 0.45 : 1);
         dummy.position.set(n.x, n.ry + th * 0.5, n.rz);
         dummy.scale.set(n.important ? 0.022 : 0.011, Math.max(0.04, th), n.important ? 0.022 : 0.011);
         dummy.rotation.set(0, 0, 0);
@@ -1015,6 +1145,10 @@ function updateNodes(time) {
     }
     view.nodes.instanceMatrix.needsUpdate = true;
     if (view.nodes.instanceColor) view.nodes.instanceColor.needsUpdate = true;
+    if (view.halos) {
+      view.halos.instanceMatrix.needsUpdate = true;
+      if (view.halos.instanceColor) view.halos.instanceColor.needsUpdate = true;
+    }
     if (view.ticks) {
       view.ticks.instanceMatrix.needsUpdate = true;
       if (view.ticks.instanceColor) view.ticks.instanceColor.needsUpdate = true;
@@ -1062,6 +1196,7 @@ function clearWorld() {
   view.group = null;
   view.nodes = null;
   view.ticks = null;
+  view.halos = null;
   view.arcs = null;
   view.arcHot = null;
   view.ribbons = [];
@@ -1119,7 +1254,8 @@ function layoutWorld() {
       tickH: important ? 0.42 : 0.22,
       important,
       alert,
-      phase: hashPhase(ev.id)
+      phase: hashPhase(ev.id),
+      glow: 0
     };
     state.nodes.push(node);
   }
@@ -1484,24 +1620,76 @@ function buildInstances(group) {
   ticks.renderOrder = 4;
   group.add(ticks);
   view.ticks = ticks;
+
+  const haloGeo = new THREE.SphereGeometry(1, 8, 6);
+  const haloMat = new THREE.MeshBasicMaterial({
+    color: 0xfff1dc,
+    transparent: true,
+    opacity: 0.34,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    toneMapped: false
+  });
+  const halos = new THREE.InstancedMesh(haloGeo, haloMat, count);
+  halos.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(count * 3), 3);
+  halos.frustumCulled = false;
+  halos.renderOrder = 6;
+  group.add(halos);
+  view.halos = halos;
   updateNodes(view.time || 0);
 }
 
-function buildArcs(group) {
-  if (state.offKind.has("tool_call") && state.offKind.has("tool_result")) return;
-  const drawable = [];
-  for (const pair of state.pairs) {
-    if (state.offKind.has(pair.call.kind) || state.offKind.has(pair.result.kind)) continue;
-    const laneA = laneForEvent(pair.call);
-    const laneB = laneForEvent(pair.result) || laneA;
-    if (!laneA || !laneB) continue;
-    drawable.push({ pair, laneA, laneB });
+function delegationCurves() {
+  const links = state.delegation || [];
+  const curves = [];
+  for (let i = 0; i < links.length; i++) {
+    const link = links[i];
+    if (!link || !link.parent || !link.child) continue;
+    const parent = state.lanes.find((l) => l.id === "s:" + link.parent);
+    const child = state.lanes.find((l) => l.id === "s:" + link.child);
+    if (!parent || !child || parent.id === child.id) continue;
+    const t = clamp(child.t0, state.t0, state.t1);
+    const span = Math.max(0.35, (child.t1 - child.t0) * 0.12);
+    const t2 = clamp(t + span, state.t0, state.t1);
+    curves.push({
+      a: { x: timeToX(clamp(t, parent.a, parent.b)), y: parent.y, z: parent.z },
+      b: { x: timeToX(t2), y: child.y, z: child.z },
+      seed: parent.seed + 0.17,
+      pair: null
+    });
   }
-  drawable.sort((a, b) => b.pair.dur - a.pair.dur);
-  if (drawable.length > MAX_ARCS) drawable.length = MAX_ARCS;
-  if (!drawable.length) return;
+  return curves;
+}
+
+function buildArcs(group) {
+  const hideTools = state.offKind.has("tool_call") && state.offKind.has("tool_result");
+  const drawable = [];
+  if (!hideTools) {
+    for (const pair of state.pairs) {
+      if (state.offKind.has(pair.call.kind) || state.offKind.has(pair.result.kind)) continue;
+      const laneA = laneForEvent(pair.call);
+      const laneB = laneForEvent(pair.result) || laneA;
+      if (!laneA || !laneB) continue;
+      drawable.push({ pair, laneA, laneB });
+    }
+    drawable.sort((a, b) => b.pair.dur - a.pair.dur);
+    if (drawable.length > MAX_ARCS) drawable.length = MAX_ARCS;
+  }
+  const items = [];
+  for (let i = 0; i < drawable.length; i++) {
+    const item = drawable[i];
+    items.push({
+      a: { x: timeToX(item.pair.call.ts_unix), y: item.laneA.y, z: item.laneA.z },
+      b: { x: timeToX(item.pair.result.ts_unix), y: item.laneB.y, z: item.laneB.z },
+      seed: item.laneA.seed,
+      pair: item.pair
+    });
+  }
+  const deleg = delegationCurves();
+  for (let i = 0; i < deleg.length; i++) items.push(deleg[i]);
+  if (!items.length) return;
   const SEG = 22;
-  const vertCount = drawable.length * (SEG + 1) * 2;
+  const vertCount = items.length * (SEG + 1) * 2;
   const pos = new Float32Array(vertCount * 3);
   const uv = new Float32Array(vertCount * 2);
   const seed = new Float32Array(vertCount);
@@ -1509,17 +1697,9 @@ function buildArcs(group) {
   const idx = [];
   let v = 0;
   state.arcs = [];
-  for (const item of drawable) {
-    const a = {
-      x: timeToX(item.pair.call.ts_unix),
-      y: item.laneA.y,
-      z: item.laneA.z
-    };
-    const b = {
-      x: timeToX(item.pair.result.ts_unix),
-      y: item.laneB.y,
-      z: item.laneB.z
-    };
+  for (const item of items) {
+    const a = item.a;
+    const b = item.b;
     const dist = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
     const lift = Math.min(2.8, 0.62 + dist * 0.34);
     const c = {
@@ -1539,7 +1719,7 @@ function buildArcs(group) {
       });
     }
     const v0 = v;
-    const arcSeed = item.laneA.seed;
+    const arcSeed = item.seed;
     for (let i = 0; i <= SEG; i++) {
       const prev = pts[Math.max(0, i - 1)];
       const next = pts[Math.min(SEG, i + 1)];
@@ -1618,10 +1798,11 @@ function buildArcs(group) {
         float edge = abs(vEdge - 0.5) * 2.0;
         float core = pow(1.0 - clamp(edge, 0.0, 1.0), 1.6);
         float ends = smoothstep(0.0, 0.06, vAlong) * smoothstep(1.0, 0.94, vAlong);
-        float travel = fract(uTime * 0.28);
-        float d = abs(vAlong - travel);
-        d = min(d, 1.0 - d);
-        float pulse = exp(-pow(d * 7.5, 2.0));
+        float travel = fract(uTime * 0.2);
+        float behind = fract(travel - vAlong);
+        float head = exp(-behind * behind * 380.0);
+        float tail = exp(-behind * 4.6) * (1.0 - smoothstep(0.02, 0.48, behind));
+        float pulse = head * 0.95 + tail * 0.5;
         float prox = exp(-pow((vX - uPlayX) * 0.8, 2.0));
         vec3 col = uColor * (0.45 + core * 0.7 + pulse * 1.15 + vHot * 0.45 + prox * 0.35);
         float alpha = ends * (0.45 + core * 0.5 + pulse * 0.35) * vFog;
@@ -1649,7 +1830,7 @@ function markHotArcs() {
   arr.fill(0);
   for (const arc of state.arcs) {
     const id = state.selected;
-    const hot = id && (id === arc.pair.call.id || id === arc.pair.result.id);
+    const hot = id && arc.pair && (id === arc.pair.call.id || id === arc.pair.result.id);
     if (!hot) continue;
     for (let i = arc.v0; i < arc.v1; i++) arr[i] = 1;
   }
@@ -1969,6 +2150,7 @@ function layoutLabels() {
       if (!blocksLabel(boxes, x, y, box.w, box.h, dir)) {
         rememberLabel(boxes, x, y, box.w, box.h, dir);
         drawLabel(x, y, lane.name, cls, item.op, dir.ang);
+        armLaneTag(lane.id);
         placed = true;
         break;
       }
@@ -1976,7 +2158,10 @@ function layoutLabels() {
     if (!placed && state.selectedLane === lane.id) {
       const p = laneNamePoint(lane, item.i, 0);
       const s = toScreen(p.x, p.y, p.z);
-      if (s) drawLabel(s.x + dir.x * 6, s.y + dir.y * 6, lane.name, cls, 1, dir.ang);
+      if (s) {
+        drawLabel(s.x + dir.x * 6, s.y + dir.y * 6, lane.name, cls, 1, dir.ang);
+        armLaneTag(lane.id);
+      }
     }
   }
 
@@ -2140,7 +2325,18 @@ function drawLabel(x, y, text, cls, opacity, rotDeg) {
   el.style.transformOrigin = "0 50%";
   el.style.transform = "translate3d(" + x.toFixed(1) + "px," + (y - h * 0.5).toFixed(1) + "px,0) rotate(" + rot.toFixed(2) + "deg)";
   el.style.opacity = fade >= 0.995 ? "1" : Math.max(0.28, fade).toFixed(2);
+  el.style.pointerEvents = "none";
+  el.style.cursor = "";
+  if (el.dataset.lane) delete el.dataset.lane;
   labelUsed += 1;
+}
+
+function armLaneTag(laneId) {
+  const el = labelPool[labelUsed - 1];
+  if (!el) return;
+  el.dataset.lane = laneId;
+  el.style.pointerEvents = "auto";
+  el.style.cursor = "pointer";
 }
 
 function toScreen(x, y, z) {
@@ -2178,6 +2374,7 @@ function show(doc) {
   state.selected = null;
   state.selectedLane = null;
   state.hoverId = null;
+  state.delegation = Array.isArray(doc.delegation) ? doc.delegation : [];
   state.pairs = pairTools(state.events);
   const domain = domainOf(state.events);
   state.t0 = domain[0];
@@ -2185,6 +2382,8 @@ function show(doc) {
   state.brush0 = state.t0;
   state.brush1 = state.t1;
   state.play = state.t0;
+  state.prevPlay = state.play;
+  state.focused = false;
   state.playing = true;
   state.modeOrbit = "off";
   $("btn-orbit").classList.remove("on");
@@ -2302,14 +2501,20 @@ function fitCamera(immediate) {
   state.desired.radius = radiusToFit(b, VIEW_THETA, VIEW_PHI);
   state.desired.phi = VIEW_PHI;
   state.desired.theta = VIEW_THETA;
-  state.flying = !immediate;
+  state.focused = false;
+  syncFitButton();
   if (immediate) {
+    camFlight.active = false;
+    state.flying = false;
     state.target.copy(state.desired.target);
     state.radius = state.desired.radius;
     state.phi = state.desired.phi;
     state.theta = state.desired.theta;
     applyCamera();
+    return;
   }
+  beginFlight(980);
+  if (state.events.length) setHint(HINT, false);
 }
 
 function rebuildFiltered() {
@@ -2332,6 +2537,7 @@ function rebuildFiltered() {
   state.playing = playing;
   state.selected = selected && state.eventById.has(selected) ? selected : null;
   state.selectedLane = state.lanes.some((l) => l.id === lane) ? lane : null;
+  state.prevPlay = state.play;
   renderStatic();
 }
 
@@ -2955,10 +3161,13 @@ function frameBrush() {
   const width = Math.max(2.4, x1 - x0);
   const fov = camera.fov * Math.PI / 180;
   const dist = (width * 0.62) / Math.tan(fov / 2);
-  state.flying = true;
+  state.focused = true;
   state.desired.target.set(cx, state.centerY, 0);
   state.desired.radius = THREE.MathUtils.clamp(dist, 6, 78);
   state.desired.phi = 0.72;
+  state.desired.theta = state.theta;
+  beginFlight(860);
+  syncFitButton();
 }
 
 function selectEvent(id) {
@@ -2976,12 +3185,15 @@ function selectEvent(id) {
   }
   state.play = clamp(ev.ts_unix, state.brush0, state.brush1);
   if (node) {
-    state.flying = true;
+    state.focused = true;
     const f = flowAt(node.x, node.seed, view.time);
     state.desired.target.set(node.x, node.y + f.y, node.z + f.z);
     state.desired.radius = 7.2;
-    state.desired.phi = 0.64;
+    state.desired.phi = 0.58;
     state.desired.theta = state.theta + 0.22;
+    beginFlight(920);
+    syncFitButton();
+    setHint("Event framed. FIT returns to the full scene.", false);
   }
   renderInspector();
   syncSelectedClasses();
@@ -2999,13 +3211,16 @@ function selectLane(id) {
   state.selected = null;
   state.selectedLane = id;
   markInteract();
-  state.flying = true;
   const x0 = timeToX(lane.a);
   const x1 = timeToX(lane.b);
-  state.desired.target.set((x0 + x1) / 2, lane.y, lane.z);
-  state.desired.radius = THREE.MathUtils.clamp(Math.max(2.2, x1 - x0) * 0.9 + 3, 6.5, 30);
-  state.desired.phi = 0.7;
-  state.desired.theta = state.theta + 0.2;
+  state.focused = true;
+  state.desired.target.set((x0 + x1) / 2, lane.y + 0.12, lane.z);
+  state.desired.radius = THREE.MathUtils.clamp(Math.max(2.2, x1 - x0) * 0.72 + 4.2, 7.2, 28);
+  state.desired.phi = 0.62;
+  state.desired.theta = state.theta + 0.28;
+  beginFlight(980);
+  syncFitButton();
+  setHint("Track framed. FIT returns to the full scene.", false);
   state.play = clamp(lane.t0, state.brush0, state.brush1);
   state.playing = true;
   syncPlayButton();
@@ -3115,6 +3330,10 @@ function wire() {
     const row = e.target.closest("[data-sel]");
     if (row) selectLane(row.dataset.sel);
   });
+  $("labels").addEventListener("click", (e) => {
+    const tag = e.target.closest("[data-lane]");
+    if (tag) selectLane(tag.dataset.lane);
+  });
   $("tools-body").addEventListener("click", (e) => {
     const row = e.target.closest("[data-sel]");
     if (row) selectEvent(row.dataset.sel);
@@ -3189,7 +3408,8 @@ function wire() {
     let dy = e.deltaY;
     if (e.deltaMode === 1) dy *= 16;
     if (e.deltaMode === 2) dy *= 120;
-    state.desired.radius = THREE.MathUtils.clamp(state.desired.radius * Math.exp(dy * 0.00115), DOLLY_MIN, DOLLY_MAX);
+    releaseCamera();
+    state.desired.radius = THREE.MathUtils.clamp(state.radius * Math.exp(dy * 0.00115), DOLLY_MIN, DOLLY_MAX);
     state.radius = state.desired.radius;
   }, { passive: false });
   canvas.addEventListener("dblclick", (e) => {
@@ -3261,10 +3481,12 @@ function wire() {
 
 function dolly(factor) {
   markInteract();
-  state.desired.radius = THREE.MathUtils.clamp(state.desired.radius * factor, DOLLY_MIN, DOLLY_MAX);
+  releaseCamera();
+  state.desired.radius = THREE.MathUtils.clamp(state.radius * factor, DOLLY_MIN, DOLLY_MAX);
 }
 
 function orbitBy(dx, dy) {
+  releaseCamera();
   state.theta -= dx * 0.005;
   state.phi = THREE.MathUtils.clamp(state.phi + dy * 0.0035, 0.12, 1.2);
   state.desired.theta = state.theta;
@@ -3272,6 +3494,7 @@ function orbitBy(dx, dy) {
 }
 
 function pan(dx, dy) {
+  releaseCamera();
   const xAxis = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
   const yAxis = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1);
   const scale = state.radius * 0.0015;
@@ -3637,6 +3860,18 @@ function fromRecords(records, label) {
   return { sessions, events: packed.events, label, note: "", timezone: "America/Toronto", truncated: packed.truncated };
 }
 
+function delegationOf(data) {
+  const box = data && data.delegation;
+  const links = box && Array.isArray(box.links) ? box.links : Array.isArray(box) ? box : [];
+  const out = [];
+  for (let i = 0; i < links.length; i++) {
+    const link = links[i];
+    if (!link || link.parent == null || link.child == null) continue;
+    out.push({ parent: String(link.parent), child: String(link.child) });
+  }
+  return out;
+}
+
 function normalize(data, label) {
   if (Array.isArray(data)) return fromRecords(data, label);
   if (!data || typeof data !== "object") throw new Error("Unrecognized document.");
@@ -3648,6 +3883,7 @@ function normalize(data, label) {
     return {
       sessions: Array.isArray(data.sessions) ? data.sessions : [],
       events: packed.events,
+      delegation: delegationOf(data),
       label,
       note,
       timezone,
@@ -3658,6 +3894,7 @@ function normalize(data, label) {
     const mixed = fromRecords((data.sessions || []).concat(data.logs || []), label);
     mixed.note = note;
     mixed.timezone = timezone;
+    mixed.delegation = delegationOf(data);
     return mixed;
   }
   if (classify(data)) {

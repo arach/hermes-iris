@@ -144,11 +144,60 @@
   #panel-models { flex: 0 1 auto; max-height: min(168px, 24%); min-height: 0; overflow: hidden; }
   #panel-kinds { flex: 0.75 1 96px; min-height: 0; overflow: hidden; }
   #panel-sessions { flex: 1.8 1 180px; min-height: 0; overflow: hidden; }
-  #panel-log { flex: 1.35 1 120px; overflow: hidden; }
-  #panel-tools { flex: 1 1 96px; overflow: hidden; }
-  #panel-artifacts { flex: 0 1 156px; min-height: 88px; overflow: hidden; }
-  #panel-alerts { flex: 0 0 128px; overflow: hidden; }
-  #panel-mesh { flex: 0 0 148px; overflow: hidden; }
+  #panel-artifacts { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+  #panel-artifacts.collapsed .art-tools,
+  #panel-artifacts.collapsed #artifacts-body { display: none; }
+  #panel-tools.fold, #panel-alerts.fold, #panel-mesh.fold { flex: 0 0 auto; }
+  #panel-tools.fold > .body, #panel-alerts.fold > .body, #panel-mesh.fold > .body { display: none; }
+  #panel-tools.fold > h2, #panel-alerts.fold > h2, #panel-mesh.fold > h2 { margin-bottom: 0; cursor: pointer; }
+  #panel-tools:not(.fold), #panel-alerts:not(.fold) { flex: 0.7 1 96px; min-height: 0; overflow: hidden; }
+  #panel-mesh:not(.fold) { flex: 0 0 132px; min-height: 0; overflow: hidden; }
+  .art-tools { display: flex; flex-direction: column; gap: 6px; margin: 0 0 6px; }
+  #artifact-filter {
+    width: 100%;
+    background: #100e0c;
+    border: 1px solid var(--line-strong);
+    padding: 5px 7px;
+    color: var(--ink);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  #artifact-filter::placeholder { color: var(--faint); }
+  .art-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .art-chips button { padding: 2px 6px; letter-spacing: 0.08em; }
+  .stream-modes { display: inline-flex; gap: 4px; }
+  .stream-modes button { padding: 2px 6px; letter-spacing: 0.08em; }
+  .evt-bar { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 6px; }
+  .evt-bar button { padding: 2px 5px; letter-spacing: 0.06em; }
+  #session-chip { margin: 0 0 6px; }
+  #session-chip button {
+    width: 100%;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: 0.03em;
+    color: #1a120c;
+    background: var(--accent);
+    border-color: var(--accent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #stream-scroll { overflow: auto; flex: 1; min-height: 0; }
+  #stream-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+  #stream-scroll::-webkit-scrollbar-thumb { background: #2a261f; }
+  .art-sec {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 8px 0 4px;
+    padding: 3px 0;
+    background: #0c0a08;
+    color: var(--faint);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  #panel-alerts, #panel-mesh, #panel-tools { min-height: 0; }
   h2 {
     margin: 0 0 6px;
     font-size: 9px;
@@ -280,27 +329,64 @@
   .kind:hover, .sess:hover, .tool:hover, .alert:hover, .log-line:hover, .art:hover { background: rgba(255, 255, 255, 0.03); }
   .art {
     display: grid;
-    grid-template-columns: 8px minmax(0, 1fr);
-    gap: 6px;
+    grid-template-columns: 18px minmax(0, 1fr) auto;
+    gap: 8px;
     align-items: center;
     width: 100%;
     border: 0;
     border-left: 2px solid transparent;
+    border-bottom: 1px solid rgba(236, 226, 210, 0.05);
     background: transparent;
     text-align: left;
     text-transform: none;
     letter-spacing: 0;
-    padding: 4px 2px;
+    padding: 6px 2px 7px;
     font-size: 11px;
     cursor: pointer;
   }
-  .art .path {
+  .art-kind {
+    width: 16px;
+    height: 16px;
+    display: grid;
+    place-items: center;
+    font-size: 9px;
+    letter-spacing: 0;
+    color: #1a120c;
+    background: var(--accent);
+  }
+  .art-kind.patched { background: #e08a28; }
+  .art-kind.read { background: #8d8378; color: #1a120c; }
+  .art-kind.image { background: #fff1df; }
+  .art-file { min-width: 0; }
+  .art .base {
     display: block;
-    color: #ddd8d0;
+    color: #fff6ea;
+    font-size: 12px;
+    letter-spacing: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .art .dir {
+    display: block;
+    margin-top: 1px;
+    color: var(--faint);
+    font-size: 9px;
+    letter-spacing: 0.02em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .art .meta {
+    color: var(--dim);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+    font-size: 9px;
+    line-height: 1.35;
+  }
+  .art .meta .n { display: block; color: #e7d3b4; }
+  .art.hot { background: rgba(255, 196, 122, 0.16); border-left-color: var(--accent); }
   .art.sel { border-left-color: var(--accent); background: rgba(255, 196, 122, 0.08); }
   .sess {
     display: grid;
@@ -345,7 +431,7 @@
   #log-body { color: var(--tan); font-size: 10px; line-height: 1.45; }
   .log-line {
     display: grid;
-    grid-template-columns: 86px 46px minmax(0, 1fr);
+    grid-template-columns: 74px 58px minmax(0, 1fr);
     gap: 6px;
     padding: 1px 2px;
     font-size: 10px;
@@ -354,7 +440,8 @@
   .log-line .msg { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .log-line.err, .log-line.err .ts, .log-line.err .lvl, .log-line.err .msg { color: #ff9a9a; }
   .log-line.warn, .log-line.warn .msg { color: #e6b57a; }
-  .log-line.tool .msg { color: #e4c48a; }
+  .log-line.tool .msg, .log-line.file .msg { color: #e4c48a; }
+  .log-line.file .lvl { color: var(--accent); }
   .log-line.now { background: rgba(255, 196, 122, 0.08); }
   .log-line.sel { box-shadow: inset 2px 0 0 var(--accent); }
   #spark svg { width: 100%; height: 42px; display: block; }
@@ -521,6 +608,15 @@
     background: rgba(7, 8, 9, 0.72);
     border: 1px solid rgba(255, 196, 122, 0.5);
   }
+  .tag.file {
+    color: #ffd7a1;
+    background: rgba(20, 12, 4, 0.9);
+    border: 1px solid rgba(255, 180, 80, 0.9);
+    letter-spacing: 0.02em;
+    text-transform: none;
+    font-size: 11px;
+    padding: 2px 6px;
+  }
   #inspector {
     position: absolute;
     top: 52px;
@@ -547,59 +643,149 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 16px;
-    background: rgba(0, 0, 0, 0.55);
+    padding: 0;
+    background: rgba(0, 0, 0, 0.62);
   }
   .artifact-card {
-    width: min(640px, 100%);
-    max-height: min(72vh, 560px);
+    width: 80vw;
+    height: 80vh;
+    max-width: 80vw;
+    max-height: 80vh;
     display: flex;
     flex-direction: column;
     background: #110e0b;
     border: 1px solid rgba(255, 196, 122, 0.45);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
   }
   .artifact-card header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
-    padding: 8px 10px;
+    gap: 16px;
+    padding: 12px 14px 10px;
     border-bottom: 1px solid var(--line);
   }
-  #artifact-path {
+  .artifact-head-main { min-width: 0; }
+  #artifact-name {
     margin-top: 4px;
-    color: #fff3e4;
-    font-size: 12px;
-    line-height: 1.35;
+    color: #fff6ea;
+    font-size: 20px;
+    line-height: 1.25;
+    letter-spacing: 0;
+    text-transform: none;
     word-break: break-all;
   }
+  #artifact-crumb {
+    margin-top: 3px;
+    color: var(--faint);
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    word-break: break-all;
+  }
+  #artifact-meta { margin-top: 4px; }
+  .artifact-head-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; flex: none; }
   #artifact-close { text-transform: none; letter-spacing: 0.08em; }
+  #artifact-versions {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  #artifact-versions button { text-transform: none; letter-spacing: 0.03em; white-space: nowrap; }
   #artifact-body {
     overflow: auto;
     flex: 1 1 auto;
     min-height: 0;
-    max-height: min(52vh, 420px);
-    padding: 8px 10px 10px;
+    padding: 0;
+    background: #0b0908;
   }
-  #artifact-body pre {
+  #artifact-body pre.code {
     margin: 0;
-    white-space: pre-wrap;
-    word-break: break-word;
+    padding: 8px 0 16px;
+    white-space: pre;
+    word-break: normal;
     color: #e6dfd4;
-    font: inherit;
+    font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.45;
+    letter-spacing: 0;
+    tab-size: 2;
+  }
+  #artifact-body .ln {
+    display: grid;
+    grid-template-columns: 4.2em minmax(0, 1fr);
+    min-height: 1.45em;
+  }
+  #artifact-body .gutter {
+    color: #6d655c;
+    text-align: right;
+    padding: 0 12px 0 8px;
+    user-select: none;
+  }
+  #artifact-body .src { padding-right: 16px; white-space: pre; }
+  #artifact-body .diff-add { background: rgba(120, 180, 110, 0.18); }
+  #artifact-body .diff-add .src { color: #d9f5cf; }
+  #artifact-body .diff-add .gutter { color: #9dcc8e; }
+  #artifact-body .diff-del { background: rgba(255, 92, 92, 0.16); }
+  #artifact-body .diff-del .src { color: #ffd0d0; }
+  #artifact-body .diff-del .gutter { color: #ff9a9a; }
+  #artifact-body .diff-hunk { background: rgba(255, 196, 122, 0.1); }
+  #artifact-body .diff-hunk .src,
+  #artifact-body .diff-hunk .gutter { color: #ffd7a8; }
+  #artifact-body .diff-meta .src { color: #9c948b; }
+  #artifact-body img { display: block; max-width: 100%; height: auto; margin: 12px auto; background: #070809; }
+  #artifact-body .md {
+    padding: 16px 22px 28px;
+    color: #e8e0d4;
+    font-size: 13px;
+    line-height: 1.55;
+    letter-spacing: 0;
+    text-transform: none;
+    max-width: 86ch;
+  }
+  #artifact-body .md h1,
+  #artifact-body .md h2,
+  #artifact-body .md h3 {
+    color: #fff6ea;
+    font-weight: 500;
+    margin: 0.9em 0 0.35em;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  #artifact-body .md h1 { font-size: 22px; }
+  #artifact-body .md h2 { font-size: 16px; }
+  #artifact-body .md h3 { font-size: 13px; }
+  #artifact-body .md p { margin: 0.45em 0; }
+  #artifact-body .md ul,
+  #artifact-body .md ol { margin: 0.35em 0 0.35em 1.2em; padding: 0; }
+  #artifact-body .md li { margin: 0.15em 0; }
+  #artifact-body .md code { background: rgba(255, 255, 255, 0.06); padding: 0 4px; }
+  #artifact-body .md pre {
+    margin: 0.6em 0;
+    padding: 10px 12px;
+    background: #090807;
+    overflow: auto;
+    font-size: 12px;
     line-height: 1.45;
   }
-  #artifact-body .diff-add { background: rgba(120, 180, 110, 0.16); color: #d9f5cf; }
-  #artifact-body .diff-del { background: rgba(255, 92, 92, 0.14); color: #ffd0d0; }
-  #artifact-body img { display: block; max-width: 100%; height: auto; background: #070809; }
-  .artifact-missing { margin: 8px 0; color: var(--dim); font-size: 11px; }
+  #artifact-body .md table { border-collapse: collapse; margin: 0.6em 0; width: 100%; }
+  #artifact-body .md th,
+  #artifact-body .md td {
+    border: 1px solid rgba(236, 226, 210, 0.14);
+    padding: 4px 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+  #artifact-body .md th { color: #fff1df; font-weight: 500; }
+  .artifact-missing { margin: 12px 14px; color: var(--dim); font-size: 12px; letter-spacing: 0.04em; text-transform: none; }
   .artifact-nav {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 8px 10px;
+    padding: 8px 12px;
     border-top: 1px solid var(--line);
   }
   #artifact-pos {
@@ -692,7 +878,7 @@
   }
 </style>
 </head>
-<body>
+<body class="arts-focus">
 <div class="app">
   <header class="top">
     <div class="brand"><i></i><span>HERMES</span><em>IRIS</em></div>
@@ -785,23 +971,56 @@
     </div>
     <aside class="col right">
       <section class="panel" id="panel-artifacts">
-        <h2>Artifacts <span id="artifact-count">(0)</span></h2>
-        <div class="body scroll" id="artifacts-body"></div>
+        <h2>
+          <span class="stream-modes" id="stream-modes">
+            <button type="button" class="on" id="stream-traces" data-mode="traces">Traces</button>
+            <button type="button" id="stream-files" data-mode="files">Files</button>
+          </span>
+          <span class="h-meta">
+            <span id="stream-count">0</span>
+            <span id="artifact-count" hidden>(0)</span>
+            <button type="button" class="text" id="artifact-focus">All panels</button>
+            <button type="button" class="text" id="artifact-collapse">Hide</button>
+          </span>
+        </h2>
+        <div class="evt-bar" id="evt-bar">
+          <button type="button" class="on" data-cat="artifacts">Artifacts</button>
+          <button type="button" class="on" data-cat="tool_call">Tool calls</button>
+          <button type="button" class="on" data-cat="tool_result">Tool results</button>
+          <button type="button" class="on" data-cat="message" title="User and assistant">Messages</button>
+          <button type="button" class="on" data-cat="delegation">Delegation</button>
+          <button type="button" class="on" data-cat="alert">Warnings/Errors</button>
+          <button type="button" data-cat="only" id="evt-only">Artifacts only</button>
+        </div>
+        <div id="session-chip" hidden></div>
+        <div class="art-tools" id="artifact-tools" hidden>
+          <input id="artifact-filter" type="search" placeholder="Filter files" autocomplete="off" spellcheck="false" aria-label="Filter artifacts">
+          <div class="art-chips" id="artifact-chips">
+            <button type="button" class="on" data-kind="written">Written</button>
+            <button type="button" class="on" data-kind="patched">Patched</button>
+            <button type="button" data-kind="read">Read</button>
+            <button type="button" class="on" data-kind="image">Image</button>
+          </div>
+          <div class="art-chips" id="artifact-groups">
+            <button type="button" class="on" data-group="session">Session</button>
+            <button type="button" data-group="dir">Directory</button>
+          </div>
+        </div>
+        <div id="stream-scroll">
+          <div id="log-body"></div>
+          <div id="artifacts-body" hidden></div>
+        </div>
       </section>
-      <section class="panel" id="panel-log">
-        <h2>Log tail <span id="log-count">0</span></h2>
-        <div class="body scroll" id="log-body"></div>
-      </section>
-      <section class="panel" id="panel-tools">
-        <h2>Tool calls <span id="tool-count">0</span></h2>
+      <section class="panel fold" id="panel-tools">
+        <h2>Tool calls <span class="h-meta"><span id="tool-count">0</span><button type="button" class="text fold-toggle">Show</button></span></h2>
         <div class="body scroll" id="tools-body"></div>
       </section>
-      <section class="panel" id="panel-alerts">
-        <h2>Errors / warnings <span id="alert-count">0</span></h2>
+      <section class="panel fold" id="panel-alerts">
+        <h2>Errors / warnings <span class="h-meta"><span id="alert-count">0</span><button type="button" class="text fold-toggle">Show</button></span></h2>
         <div class="body scroll" id="alerts-body"></div>
       </section>
-      <section class="panel" id="panel-mesh">
-        <h2>Session → tool <span id="mesh-count"></span></h2>
+      <section class="panel fold" id="panel-mesh">
+        <h2>Session → tool <span class="h-meta"><span id="mesh-count"></span><button type="button" class="text fold-toggle">Show</button></span></h2>
         <div class="body" id="mesh-body"></div>
       </section>
     </aside>
@@ -821,15 +1040,22 @@
 </div>
 <div id="drop" hidden>Drop hermes log</div>
 <div id="artifact-modal" hidden>
-  <div class="artifact-card" role="dialog" aria-modal="true" aria-labelledby="artifact-path">
+  <div class="artifact-card" role="dialog" aria-modal="true" aria-labelledby="artifact-name">
     <header>
-      <div>
+      <div class="artifact-head-main">
         <div class="kicker" id="artifact-kind"></div>
-        <div id="artifact-path"></div>
+        <div id="artifact-name"></div>
+        <div id="artifact-crumb"></div>
         <div class="sub" id="artifact-meta"></div>
       </div>
-      <button type="button" id="artifact-close" aria-label="Close">X</button>
+      <div class="artifact-head-actions">
+        <button type="button" id="artifact-copy">Copy</button>
+        <button type="button" id="artifact-raw" hidden>Raw</button>
+        <button type="button" id="artifact-jump">Jump to event</button>
+        <button type="button" id="artifact-close" aria-label="Close">X</button>
+      </div>
     </header>
+    <div id="artifact-versions" hidden></div>
     <div id="artifact-body"></div>
     <div class="artifact-nav">
       <button type="button" id="artifact-prev">Prev</button>
@@ -935,6 +1161,28 @@ const state = {
   artifacts: [],
   artifactByEvent: new Map(),
   artifactCursor: -1,
+  artifactVersion: 0,
+  artifactRaw: false,
+  artifactQuery: "",
+  artifactGroup: "session",
+  artifactFocus: true,
+  artifactPanelOpen: true,
+  focusSession: null,
+  streamMode: "traces",
+  eventFilters: {
+    artifacts: true,
+    tool_call: true,
+    tool_result: true,
+    message: true,
+    delegation: true,
+    alert: true,
+    artifactsOnly: false
+  },
+  artifactKinds: new Set(["written", "patched", "image"]),
+  artifactMarks: new Set(),
+  artifactKindByEvent: new Map(),
+  hoverArt: -1,
+  hoverFrom: "",
   lastInteract: 0,
   centerY: 0,
   fitRadius: 24,
@@ -1310,8 +1558,12 @@ function updateNodes(time) {
       let pulse = 1 + shimmer * 0.42;
       if (n.alert) pulse += 0.42 * (0.5 + 0.5 * Math.sin(time * 5.4 + n.phase));
       const outside = n.x < x0 || n.x > x1;
-      const sel = state.selected === n.event.id ? 1.22 : state.hoverId === n.event.id ? 1.12 : 1;
-      const sc = n.baseScale * (1 + flare * 0.55 + shimmer * 0.85) * pulse * sel * (outside ? 0.7 : 1);
+      const artIdx = state.artifactByEvent.get(n.event.id);
+      const artHot = artIdx != null && artIdx === state.hoverArt;
+      const born = n.artifact && n.glow > 0.08 && n.artifactKind !== "read";
+      const sel = state.selected === n.event.id ? 1.28 : (state.hoverId === n.event.id || artHot) ? 1.2 : 1;
+      const focus = focusScale(n);
+      const sc = n.baseScale * (1 + flare * 0.55 + shimmer * 0.85) * pulse * sel * focus * (outside ? 0.7 : 1);
       dummy.position.set(n.x, n.ry, n.rz);
       dummy.scale.setScalar(Math.max(0.012, sc));
       dummy.rotation.set(0, time * 0.25 + n.phase, 0);
@@ -1324,6 +1576,17 @@ function updateNodes(time) {
         tmpColor.g = Math.min(1.25, tmpColor.g + shimmer * 0.22);
       }
       if (state.selected === n.event.id) tmpColor.g = Math.min(1.2, tmpColor.g + 0.08);
+      if (state.focusSession && n.event.session_id !== state.focusSession) tmpColor.multiplyScalar(0.32);
+      else if (state.focusSession && n.event.session_id === state.focusSession && (n.artifact || state.artifactByEvent.has(n.event.id))) {
+        tmpColor.r = Math.min(1.55, tmpColor.r + 0.4);
+        tmpColor.g = Math.min(1.2, tmpColor.g + 0.16);
+      }
+      if (artHot || born) {
+        const k = artHot ? 1 : n.glow;
+        tmpColor.r = Math.min(1.5, 1.05 + 0.35 * k);
+        tmpColor.g = Math.min(1.15, 0.72 + 0.2 * k);
+        tmpColor.b = 0.28;
+      }
       view.nodes.setColorAt(i, tmpColor);
       if (view.halos) {
         const hs = shimmer > 0.03 ? n.baseScale * (1.35 + shimmer * 2.1) : 0.0001;
@@ -1346,12 +1609,21 @@ function updateNodes(time) {
         view.ticks.setColorAt(i, tmpColor);
       }
       if (view.marks && n.markAt >= 0) {
-        const lift = state.selected === n.event.id ? 1.28 : 1;
-        dummy.position.set(n.x, (n.ry || n.y) + 0.02, n.rz || n.z);
-        dummy.scale.setScalar(lift);
-        dummy.rotation.set(Math.PI / 2, 0, 0);
+        const hot = artHot || state.selected === n.event.id;
+        const flash = n.artifact && n.glow > 0.05 && n.artifactKind !== "read";
+        const mine = !state.focusSession || n.event.session_id === state.focusSession;
+        const emph = !!(state.focusSession && mine && n.artifact);
+        const base = n.artifactKind === "read" ? 0.62 : n.artifactKind === "patched" ? 0.92 : 1;
+        const s = base * (hot ? 1.7 : 1) * (emph ? 1.55 : 1) * (mine ? 1 : 0.28) * (flash ? 1 + n.glow * 1.25 : 1);
+        dummy.position.set(n.x, (n.ry || n.y) + 0.38, n.rz || n.z);
+        dummy.quaternion.copy(camera.quaternion);
+        dummy.scale.set(s, s, 1);
         dummy.updateMatrix();
         view.marks.setMatrixAt(n.markAt, dummy.matrix);
+        const tint = n.artifactKind === "read" ? 0.62 : 1;
+        const markDim = mine ? 1 : 0.25;
+        tmpColor.setRGB(markDim * tint * (flash || hot || emph ? 1 : 0.95), markDim * tint * (0.72 + (hot || emph ? 0.25 : 0)), markDim * 0.32);
+        view.marks.setColorAt(n.markAt, tmpColor);
       }
     }
     view.nodes.instanceMatrix.needsUpdate = true;
@@ -1364,7 +1636,10 @@ function updateNodes(time) {
       view.ticks.instanceMatrix.needsUpdate = true;
       if (view.ticks.instanceColor) view.ticks.instanceColor.needsUpdate = true;
     }
-    if (view.marks) view.marks.instanceMatrix.needsUpdate = true;
+    if (view.marks) {
+      view.marks.instanceMatrix.needsUpdate = true;
+      if (view.marks.instanceColor) view.marks.instanceColor.needsUpdate = true;
+    }
   }
 }
 
@@ -1379,18 +1654,19 @@ function buildArtifactMarks(group) {
     marked.push(node);
   }
   if (!marked.length) return;
-  const geo = new THREE.RingGeometry(0.16, 0.22, 20);
+  const geo = new THREE.PlaneGeometry(0.62, 0.78);
   const mat = new THREE.MeshBasicMaterial({
-    color: 0xffc47a,
-    side: THREE.DoubleSide,
+    map: fileGlyphTexture(),
+    color: 0xffffff,
     transparent: true,
-    opacity: 0.82,
     depthWrite: false,
+    depthTest: false,
     toneMapped: false
   });
   const mesh = new THREE.InstancedMesh(geo, mat, marked.length);
   mesh.frustumCulled = false;
-  mesh.renderOrder = 7;
+  mesh.renderOrder = 12;
+  for (let i = 0; i < marked.length; i++) mesh.setColorAt(i, new THREE.Color(1, 0.78, 0.42));
   group.add(mesh);
   view.marks = mesh;
 }
@@ -1494,7 +1770,8 @@ function layoutWorld() {
       tickH: important ? 0.42 : 0.22,
       important,
       alert,
-      artifact: state.artifactByEvent.has(ev.id),
+      artifact: state.artifactMarks.has(ev.id),
+      artifactKind: state.artifactKindByEvent.get(ev.id) || "",
       markAt: -1,
       phase: hashPhase(ev.id),
       glow: 0
@@ -1536,7 +1813,7 @@ function buildLanes(events) {
   const bySession = new Map();
   const byBus = new Map();
   for (const ev of events) {
-    if (state.offKind.has(ev.kind)) continue;
+    if (!eventPassesFilter(ev)) continue;
     if (ev.session_id) {
       if (!bySession.has(ev.session_id)) bySession.set(ev.session_id, []);
       bySession.get(ev.session_id).push(ev);
@@ -1644,7 +1921,7 @@ function laneForEvent(ev) {
 function chooseNodes(events) {
   const visible = [];
   for (const ev of events) {
-    if (state.offKind.has(ev.kind)) continue;
+    if (!eventPassesFilter(ev)) continue;
     if (!ev.session_id) {
       /* buses */
     } else if (!state.lanes.some((l) => l.id === "s:" + ev.session_id)) {
@@ -1906,11 +2183,11 @@ function delegationCurves() {
 }
 
 function buildArcs(group) {
-  const hideTools = state.offKind.has("tool_call") && state.offKind.has("tool_result");
+  const showTools = !state.eventFilters.artifactsOnly && (state.eventFilters.tool_call !== false || state.eventFilters.tool_result !== false);
   const drawable = [];
-  if (!hideTools) {
+  if (showTools) {
     for (const pair of state.pairs) {
-      if (state.offKind.has(pair.call.kind) || state.offKind.has(pair.result.kind)) continue;
+      if (!eventPassesFilter(pair.call) && !eventPassesFilter(pair.result)) continue;
       const laneA = laneForEvent(pair.call);
       const laneB = laneForEvent(pair.result) || laneA;
       if (!laneA || !laneB) continue;
@@ -1929,8 +2206,10 @@ function buildArcs(group) {
       pair: item.pair
     });
   }
-  const deleg = delegationCurves();
-  for (let i = 0; i < deleg.length; i++) items.push(deleg[i]);
+  if (!state.eventFilters.artifactsOnly && state.eventFilters.delegation !== false) {
+    const deleg = delegationCurves();
+    for (let i = 0; i < deleg.length; i++) items.push(deleg[i]);
+  }
   if (!items.length) return;
   const SEG = 22;
   const vertCount = items.length * (SEG + 1) * 2;
@@ -2327,6 +2606,157 @@ function isAlert(ev) {
   return ev.kind === "error" || ev.kind === "warning" || ev.level === "ERROR" || ev.level === "CRITICAL" || ev.level === "WARNING";
 }
 
+const FILTER_KEY = "iris.eventFilters.v1";
+const FILTER_CATS = ["artifacts", "tool_call", "tool_result", "message", "delegation", "alert"];
+
+function eventCategory(ev) {
+  if (!ev) return "other";
+  if (state.artifactByEvent.has(ev.id) || state.artifactMarks.has(ev.id)) return "artifacts";
+  if (isAlert(ev)) return "alert";
+  if (ev.kind === "tool_call") return "tool_call";
+  if (ev.kind === "tool_result") return "tool_result";
+  if (ev.kind === "user" || ev.kind === "assistant") return "message";
+  if (ev.kind === "delegate") return "delegation";
+  return "other";
+}
+
+function eventPassesFilter(ev) {
+  if (!ev) return false;
+  if (state.offKind.has(ev.kind)) return false;
+  if (state.eventFilters.artifactsOnly) return eventCategory(ev) === "artifacts";
+  const cat = eventCategory(ev);
+  if (cat === "other") return true;
+  return state.eventFilters[cat] !== false;
+}
+
+function focusScale(node) {
+  if (!state.focusSession) return 1;
+  if (node.event.session_id !== state.focusSession) return 0.45;
+  if (node.artifact || state.artifactByEvent.has(node.event.id)) return 1.7;
+  return 1;
+}
+
+function loadEventFilters() {
+  try {
+    const raw = localStorage.getItem(FILTER_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (!data || typeof data !== "object") return;
+    for (let i = 0; i < FILTER_CATS.length; i++) {
+      const key = FILTER_CATS[i];
+      if (typeof data[key] === "boolean") state.eventFilters[key] = data[key];
+    }
+    if (typeof data.artifactsOnly === "boolean") state.eventFilters.artifactsOnly = data.artifactsOnly;
+  } catch (err) {
+    /* ignore unreadable storage */
+  }
+}
+
+function saveEventFilters() {
+  try {
+    localStorage.setItem(FILTER_KEY, JSON.stringify(state.eventFilters));
+  } catch (err) {
+    /* private mode */
+  }
+}
+
+function filterStamp() {
+  const f = state.eventFilters;
+  let bits = f.artifactsOnly ? "A" : "a";
+  for (let i = 0; i < FILTER_CATS.length; i++) bits += f[FILTER_CATS[i]] === false ? "0" : "1";
+  return bits + ":" + [...state.offKind].sort().join(",");
+}
+
+function viewKey(idx) {
+  return idx + ":" + (state.selected || "") + ":" + (state.focusSession || "") + ":" + state.streamMode + ":" + filterStamp();
+}
+
+function paintEventFilters() {
+  const buttons = document.querySelectorAll("#evt-bar [data-cat]");
+  for (let i = 0; i < buttons.length; i++) {
+    const cat = buttons[i].dataset.cat;
+    const on = cat === "only" ? !!state.eventFilters.artifactsOnly : !state.eventFilters.artifactsOnly && state.eventFilters[cat] !== false;
+    buttons[i].classList.toggle("on", on);
+    buttons[i].setAttribute("aria-pressed", on ? "true" : "false");
+  }
+}
+
+function syncStreamMode() {
+  const files = state.streamMode === "files";
+  const tools = $("artifact-tools");
+  const arts = $("artifacts-body");
+  const log = $("log-body");
+  if (tools) tools.hidden = !files;
+  if (arts) arts.hidden = !files;
+  if (log) log.hidden = files;
+  const traces = $("stream-traces");
+  const filesBtn = $("stream-files");
+  if (traces) traces.classList.toggle("on", !files);
+  if (filesBtn) filesBtn.classList.toggle("on", files);
+  const count = $("artifact-count");
+  const streamCount = $("stream-count");
+  if (count) count.hidden = !files;
+  if (streamCount) streamCount.hidden = files;
+}
+
+function artifactInSession(art, sid) {
+  if (!sid) return true;
+  if ((art.session || "") === sid) return true;
+  const versions = art.versions || [];
+  for (let i = 0; i < versions.length; i++) {
+    if ((versions[i].session || "") === sid) return true;
+  }
+  return false;
+}
+
+function artifactShown(art) {
+  const versions = art.versions || [];
+  let best = null;
+  for (let i = 0; i < versions.length; i++) {
+    const ver = versions[i];
+    if (state.focusSession && (ver.session || "") !== state.focusSession) continue;
+    if ((ver.ts || 0) > state.play + 0.0005) continue;
+    if (!best || (ver.ts || 0) >= (best.ts || 0)) best = ver;
+  }
+  return best;
+}
+
+function sessionArtifactCount(sid) {
+  const list = state.artifacts || [];
+  let n = 0;
+  for (let i = 0; i < list.length; i++) {
+    if (artifactInSession(list[i], sid)) n += 1;
+  }
+  return n;
+}
+
+function renderSessionChip() {
+  const el = $("session-chip");
+  if (!el) return;
+  const sid = state.focusSession;
+  if (!sid) {
+    el.hidden = true;
+    el.replaceChildren();
+    return;
+  }
+  const n = sessionArtifactCount(sid);
+  el.hidden = false;
+  el.innerHTML = '<button type="button" id="session-clear">Session ' + esc(shortId(sid)) + " · " + n + " artifacts · ✕ clear</button>";
+}
+
+function refreshFocusViews() {
+  renderSessionChip();
+  renderArtifacts();
+  renderTools();
+  renderAlerts();
+  renderMesh();
+  const idx = state.events.length ? lastIndexAtOrBefore(state.play) : -1;
+  renderLog(idx);
+  logKey = viewKey(idx);
+  syncSelectedClasses();
+  syncStreamMode();
+}
+
 function hashPhase(id) {
   let h = 2166136261;
   const s = String(id);
@@ -2353,9 +2783,39 @@ function layoutLabels() {
   const hover = state.hoverId ? state.nodeById.get(state.hoverId) : null;
   const selected = state.selected ? state.nodeById.get(state.selected) : null;
   const pins = [];
-  if (selected) pins.push({ node: selected, text: pinText(selected), cls: "sel", keep: true });
+  if (selected) {
+    const artSel = state.artifactByEvent.has(selected.event.id);
+    pins.push({ node: selected, text: pinText(selected), cls: artSel ? "file" : "sel", keep: true });
+  }
   if (hover && (!selected || hover.event.id !== selected.event.id)) {
-    pins.push({ node: hover, text: pinText(hover), cls: "hot", keep: true });
+    const artHover = state.artifactByEvent.has(hover.event.id);
+    pins.push({ node: hover, text: pinText(hover), cls: artHover ? "file" : "hot", keep: true });
+  }
+  if (state.hoverArt >= 0) {
+    const hovered = state.artifacts[state.hoverArt];
+    if (hovered) {
+      const label = hovered.name || fileBase(hovered.path);
+      const ids = hovered.markIds || [];
+      for (let i = 0; i < ids.length && i < 3; i++) {
+        const node = state.nodeById.get(ids[i]);
+        if (!node) continue;
+        if (selected && selected.event.id === node.event.id) continue;
+        if (hover && hover.event.id === node.event.id) continue;
+        pins.push({ node: node, text: label, cls: "file", keep: true });
+      }
+    }
+  }
+  let flashes = 0;
+  for (let i = 0; i < state.nodes.length; i++) {
+    const node = state.nodes[i];
+    if (!node.artifact || !(node.glow > 0.45) || node.artifactKind === "read") continue;
+    if (flashes >= 2) break;
+    const idx = state.artifactByEvent.get(node.event.id);
+    const art = idx != null ? state.artifacts[idx] : null;
+    const name = art ? (art.name || fileBase(art.path)) : "file";
+    const verb = node.artifactKind === "patched" ? "Patched " : "Wrote ";
+    pins.push({ node: node, text: verb + name, cls: "file", keep: false });
+    flashes += 1;
   }
   const alerts = [];
   for (const node of state.nodes) {
@@ -2376,7 +2836,7 @@ function layoutLabels() {
   const names = state.lanes.map((lane, i) => ({
     lane,
     i,
-    op: state.selectedLane === lane.id ? 1 : fade[i]
+    op: (state.selectedLane === lane.id ? 1 : fade[i]) * ((state.focusSession && lane.id !== "s:" + state.focusSession) ? 0.38 : 1)
   }));
   names.sort((a, b) => b.op - a.op);
   for (const item of names) {
@@ -2437,6 +2897,7 @@ function layoutLabels() {
     }
   }
   for (let i = labelUsed; i < labelPool.length; i++) labelPool[i].style.display = "none";
+  syncArtifactHover();
 }
 
 function isWarnEvent(ev) {
@@ -2444,6 +2905,8 @@ function isWarnEvent(ev) {
 }
 
 function pinText(node) {
+  const artAt = state.artifactByEvent.get(node.event.id);
+  if (artAt != null && state.artifacts[artAt]) return state.artifacts[artAt].name || fileBase(state.artifacts[artAt].path);
   const kind = String(node.event.kind || "event").replace(/_/g, " ");
   const tool = node.event.tool_name ? " · " + node.event.tool_name : "";
   return (kind + tool).toUpperCase();
@@ -2545,8 +3008,8 @@ function blocksLabel(boxes, x, y, w, h, dir) {
 
 function measure(text, cls) {
   return {
-    w: Math.min(300, text.length * 6.15 + (cls === "sel" ? 14 : 6)),
-    h: cls === "sel" ? 18 : 13
+    w: Math.min(420, text.length * 6.4 + (cls === "sel" || cls === "file" ? 16 : 6)),
+    h: cls === "sel" || cls === "file" ? 18 : 13
   };
 }
 
@@ -2595,48 +3058,60 @@ function toScreen(x, y, z) {
 }
 const _proj = new THREE.Vector3();
 
-const FILE_WRITE = /^(write_file|write|create_file|save_file|file_write)$/i;
+const FILE_WRITE = /^(write_file|write|create_file|save_file|file_write|create)$/i;
 const FILE_CHANGE = /^(patch|edit|edit_file|apply_patch|str_replace|search_replace|multi_edit|replace_file|notebook_edit)$/i;
+const FILE_READ = /^(read_file|read|open_file)$/i;
 const IMAGE_TOOL = /^(image|generate_image|screenshot|browser_screenshot|image_gen)$/i;
-const PATH_KEYS = ["path", "file_path", "filepath", "filename", "target_file", "target"];
+const SHELL_TOOL = /^(terminal|bash|shell|run_terminal_cmd|execute_command)$/i;
+const PATH_KEYS = ["path", "file_path", "filepath", "filename", "target_file", "target", "resolved_path"];
 const CONTENT_KEYS = ["content", "contents", "text", "new_content", "file_text", "body"];
 
 function collectArtifacts(events) {
   const sorted = events.slice().sort(eventOrder);
   const pending = new Map();
-  const artifacts = [];
+  const fifo = [];
+  const ops = [];
   for (let i = 0; i < sorted.length; i++) {
     const ev = sorted[i];
     const names = toolNamesOf(ev);
-    const sid = ev.session_id || "";
     let handled = false;
     if (ev.kind === "tool_call") {
-      if (!pending.has(sid)) pending.set(sid, []);
-      const queue = pending.get(sid);
       for (let n = 0; n < names.length; n++) {
-        const kind = fileOpKind(names[n]);
-        if (!kind) continue;
-        handled = true;
-        queue.push({ name: names[n], kind: kind, call: ev });
+        const name = names[n];
+        const kind = fileOpKind(name);
+        if (kind) {
+          handled = true;
+          const item = { name: name, kind: kind, call: ev, id: ev.tool_call_id || "", used: false };
+          if (item.id) pending.set(item.id, item);
+          fifo.push(item);
+        } else if (isShellTool(name)) {
+          handled = true;
+          const targets = shellWriteTargets(commandOf(ev));
+          for (let t = 0; t < targets.length; t++) {
+            const op = opFromPath("written", targets[t], ev, null, name);
+            if (op) ops.push(op);
+          }
+        }
       }
     } else if (ev.kind === "tool_result") {
-      const queue = pending.get(sid) || [];
       for (let n = 0; n < names.length; n++) {
-        const kind = fileOpKind(names[n]);
+        const name = names[n];
+        const kind = fileOpKind(name);
         if (!kind) continue;
         handled = true;
-        const idx = queue.findIndex((item) => item.name === names[n]);
-        const call = idx >= 0 ? queue.splice(idx, 1)[0] : null;
-        artifacts.push(describeOp(call ? call.kind : kind, call && call.call, ev));
+        const call = takeCall(pending, fifo, ev, name);
+        const op = describeOp(kind, call, ev, name);
+        if (op) ops.push(op);
       }
     }
-    if (!handled) pushLooseImages(artifacts, ev);
+    if (!handled) pushLooseImages(ops, ev);
   }
-  for (const queue of pending.values()) {
-    for (let i = 0; i < queue.length; i++) artifacts.push(describeOp(queue[i].kind, queue[i].call, null));
+  for (let i = 0; i < fifo.length; i++) {
+    if (fifo[i].used) continue;
+    const op = describeOp(fifo[i].kind, fifo[i].call, null, fifo[i].name);
+    if (op) ops.push(op);
   }
-  artifacts.sort((a, b) => a.ts - b.ts || String(a.path).localeCompare(String(b.path)));
-  return dedupeArtifacts(artifacts);
+  return groupArtifactOps(ops);
 }
 
 function eventOrder(a, b) {
@@ -2650,24 +3125,42 @@ function toolNamesOf(ev) {
 }
 
 function fileOpKind(name) {
-  if (FILE_WRITE.test(name)) return "file written";
-  if (FILE_CHANGE.test(name)) return "file changed";
+  if (FILE_WRITE.test(name)) return "written";
+  if (FILE_CHANGE.test(name)) return "patched";
+  if (FILE_READ.test(name)) return "read";
   if (IMAGE_TOOL.test(name)) return "image";
   return "";
 }
 
+function isShellTool(name) {
+  return SHELL_TOOL.test(name);
+}
+
 function indexArtifacts(list) {
   const map = new Map();
+  const marks = new Set();
+  const kinds = new Map();
   for (let i = 0; i < list.length; i++) {
-    const ids = list[i].eventIds || [];
-    for (let k = 0; k < ids.length; k++) {
-      if (ids[k] && !map.has(ids[k])) map.set(ids[k], i);
+    const versions = list[i].versions || [];
+    const markIds = list[i].markIds || [];
+    for (let m = 0; m < markIds.length; m++) if (markIds[m]) marks.add(markIds[m]);
+    for (let v = 0; v < versions.length; v++) {
+      const ver = versions[v];
+      const ids = ver.eventIds || [];
+      for (let k = 0; k < ids.length; k++) {
+        const id = ids[k];
+        if (!id) continue;
+        if (!map.has(id)) map.set(id, i);
+        if (!kinds.has(id)) kinds.set(id, ver.kind);
+      }
     }
   }
+  state.artifactMarks = marks;
+  state.artifactKindByEvent = kinds;
   return map;
 }
 
-function describeOp(kind, callEv, resultEv) {
+function describeOp(kind, callEv, resultEv, toolName) {
   const bags = [];
   if (callEv) walkPayload(callEv.detail, bags);
   if (resultEv) walkPayload(resultEv.detail, bags);
@@ -2677,22 +3170,22 @@ function describeOp(kind, callEv, resultEv) {
   const oldS = firstField(bags, ["old_string"]);
   const newS = firstField(bags, ["new_string"]);
   if (!path) path = cleanPath(diffPath(diffRaw));
+  if (!path || path === "[REDACTED]") return null;
   let body = "";
   let diff = false;
   if (diffRaw && looksLikeDiff(diffRaw)) {
     body = diffRaw;
     diff = true;
   } else if (oldS || newS) {
-    body = syntheticDiff(path || "file", oldS, newS);
+    body = syntheticDiff(path, oldS, newS);
     diff = true;
   } else if (contentRaw && !looksLikeToolStub(contentRaw)) {
     body = contentRaw;
-    diff = looksLikeDiff(contentRaw);
+    diff = kind === "patched" && looksLikeDiff(contentRaw);
   }
   const imageSrc = imageSource(bags, path);
   let outKind = kind;
-  if (imageSrc || imagePath(path)) outKind = "image";
-  if (!path) path = "path not in log";
+  if (imageSrc || (kind !== "read" && imagePath(path))) outKind = "image";
   const source = callEv || resultEv;
   const ids = [];
   if (callEv && callEv.id) ids.push(callEv.id);
@@ -2702,22 +3195,177 @@ function describeOp(kind, callEv, resultEv) {
     kind: outKind,
     session: (source && source.session_id) || "",
     ts: (source && source.ts_unix) || 0,
-    eventId: source && source.id,
+    eventId: (callEv && callEv.id) || (resultEv && resultEv.id) || "",
     eventIds: ids,
     content: body ? redact(body) : "",
     diff: diff,
-    imageSrc: imageSrc
+    imageSrc: imageSrc,
+    tool: toolName || (callEv && callEv.tool_name) || (resultEv && resultEv.tool_name) || ""
   };
 }
 
-function pushLooseImages(artifacts, ev) {
+function opFromPath(kind, path, callEv, resultEv, tool) {
+  const clean = cleanPath(path);
+  if (!clean || clean === "[REDACTED]") return null;
+  const source = callEv || resultEv;
+  const ids = [];
+  if (callEv && callEv.id) ids.push(callEv.id);
+  if (resultEv && resultEv.id && ids.indexOf(resultEv.id) === -1) ids.push(resultEv.id);
+  const imageSrc = imagePath(clean) ? loadableImage(clean) : "";
+  return {
+    path: redact(clean),
+    kind: imageSrc || imagePath(clean) ? "image" : kind,
+    session: (source && source.session_id) || "",
+    ts: (source && source.ts_unix) || 0,
+    eventId: (callEv && callEv.id) || (resultEv && resultEv.id) || "",
+    eventIds: ids,
+    content: "",
+    diff: false,
+    imageSrc: imageSrc,
+    tool: tool || ""
+  };
+}
+
+function takeCall(pending, fifo, ev, name) {
+  const id = ev.tool_call_id || "";
+  if (id && pending.has(id)) {
+    const item = pending.get(id);
+    pending.delete(id);
+    item.used = true;
+    return item.call;
+  }
+  for (let i = 0; i < fifo.length; i++) {
+    const item = fifo[i];
+    if (item.used || item.name !== name) continue;
+    if ((item.call.session_id || "") !== (ev.session_id || "")) continue;
+    item.used = true;
+    if (item.id) pending.delete(item.id);
+    return item.call;
+  }
+  return null;
+}
+
+function commandOf(ev) {
+  const bags = [];
+  walkPayload(ev && ev.detail, bags);
+  return firstField(bags, ["command", "cmd", "script"]);
+}
+
+function shellWriteTargets(command) {
+  const s = String(command || "");
+  const out = [];
+  const seen = new Set();
+  let i = 0;
+  let quote = "";
+  function pushTarget(raw) {
+    let token = String(raw || "").trim();
+    if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+      token = token.slice(1, -1);
+    }
+    if (!pathLike(token) || seen.has(token)) return;
+    seen.add(token);
+    out.push(token);
+  }
+  function readWord(from) {
+    let j = from;
+    while (j < s.length && /\s/.test(s.charAt(j))) j++;
+    if (j >= s.length) return { value: "", index: j };
+    const q = s.charAt(j);
+    if (q === "'" || q === '"') {
+      let k = j + 1;
+      let value = "";
+      while (k < s.length && s.charAt(k) !== q) {
+        if (s.charAt(k) === "\\" && k + 1 < s.length) {
+          value += s.charAt(k + 1);
+          k += 2;
+          continue;
+        }
+        value += s.charAt(k);
+        k++;
+      }
+      return { value: value, index: k < s.length ? k + 1 : k };
+    }
+    let k = j;
+    while (k < s.length && !/[\s|&;<>]/.test(s.charAt(k))) k++;
+    return { value: s.slice(j, k), index: k };
+  }
+  while (i < s.length) {
+    const c = s.charAt(i);
+    if (quote) {
+      if (c === "\\" && quote === '"' && i + 1 < s.length) i += 2;
+      else {
+        if (c === quote) quote = "";
+        i++;
+      }
+      continue;
+    }
+    if (c === "'" || c === '"') {
+      quote = c;
+      i++;
+      continue;
+    }
+    if (c === "#") {
+      while (i < s.length && s.charAt(i) !== "\n") i++;
+      continue;
+    }
+    if (c === ">") {
+      if (s.charAt(i + 1) === "=") {
+        i += 2;
+        continue;
+      }
+      let j = i + 1;
+      if (s.charAt(j) === ">") j++;
+      if (s.charAt(j) === "&") {
+        i = j + 1;
+        continue;
+      }
+      const word = readWord(j);
+      if (word.value) pushTarget(word.value);
+      i = Math.max(word.index, i + 1);
+      continue;
+    }
+    const boundary = i === 0 || /[\s|&;(]/.test(s.charAt(i - 1));
+    if (boundary && s.startsWith("tee", i) && (i + 3 >= s.length || /[\s|&;<>]/.test(s.charAt(i + 3)))) {
+      let j = i + 3;
+      while (j < s.length) {
+        while (j < s.length && /\s/.test(s.charAt(j))) j++;
+        if (j >= s.length || /[|&;<>]/.test(s.charAt(j))) break;
+        const word = readWord(j);
+        if (!word.value) break;
+        if (word.value.charAt(0) !== "-") pushTarget(word.value);
+        j = word.index;
+      }
+      i = j;
+      continue;
+    }
+    i++;
+  }
+  return out;
+}
+
+function pathLike(token) {
+  const value = String(token || "").trim();
+  if (!value || value.length > 512) return false;
+  if (/[$*?`|&;<>()[\]{}]/.test(value)) return false;
+  if (value === "-" || value.charAt(0) === "-") return false;
+  if (/^\/dev\/(null|stdout|stderr|tty|fd\/)/.test(value)) return false;
+  if (value.charAt(0) === "&") return false;
+  if (sensitivePath(value)) return false;
+  if (value.charAt(0) === "/" || value.startsWith("~/") || value.startsWith("./") || value.startsWith("../")) return true;
+  if (/^~[^/]+\//.test(value)) return true;
+  if (/(^|\/)[^/]+\.[A-Za-z0-9]{1,12}$/.test(value)) return true;
+  return false;
+}
+
+function pushLooseImages(ops, ev) {
   if (!ev) return;
   const bags = [];
   walkPayload(ev.detail, bags);
   const imageSrc = imageSource(bags, "");
   if (!imageSrc) return;
   const path = cleanPath(firstField(bags, PATH_KEYS)) || "image";
-  artifacts.push({
+  if (!path || path === "[REDACTED]") return;
+  ops.push({
     path: redact(path),
     kind: "image",
     session: ev.session_id || "",
@@ -2726,22 +3374,113 @@ function pushLooseImages(artifacts, ev) {
     eventIds: ev.id ? [ev.id] : [],
     content: "",
     diff: false,
-    imageSrc: imageSrc
+    imageSrc: imageSrc,
+    tool: ev.tool_name || ""
   });
 }
 
-function dedupeArtifacts(list) {
-  const seen = new Set();
-  const out = [];
-  for (let i = 0; i < list.length; i++) {
-    const art = list[i];
-    const ids = (art.eventIds && art.eventIds.length) ? art.eventIds.join(",") : (art.eventId || "");
-    const key = ids + "\0" + art.kind + "\0" + art.path + "\0" + String(art.imageSrc || "").slice(0, 64);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    out.push(art);
+function groupArtifactOps(ops) {
+  const order = [];
+  const by = new Map();
+  for (let i = 0; i < ops.length; i++) {
+    const op = ops[i];
+    if (!op || !op.path || op.path === "[REDACTED]") continue;
+    if (sensitivePath(op.path)) continue;
+    const key = op.path === "path not in log" ? op.path + "\0" + (op.eventId || i) : pathKey(op.path);
+    let art = by.get(key);
+    if (!art) {
+      art = { path: op.path, versions: [], seen: new Set() };
+      by.set(key, art);
+      order.push(art);
+    }
+    const sig = (op.eventIds || []).join(",") + "\0" + op.kind + "\0" + String(op.content || "").length + "\0" + (op.diff ? "d" : "");
+    if (art.seen.has(sig)) continue;
+    art.seen.add(sig);
+    art.versions.push({
+      kind: op.kind,
+      session: op.session || "",
+      ts: op.ts || 0,
+      eventId: op.eventId || "",
+      eventIds: op.eventIds || [],
+      content: op.content || "",
+      diff: !!op.diff,
+      imageSrc: op.imageSrc || "",
+      tool: op.tool || ""
+    });
   }
-  return out;
+  const files = [];
+  for (let i = 0; i < order.length; i++) {
+    const art = order[i];
+    art.versions.sort((a, b) => a.ts - b.ts || String(a.eventId).localeCompare(String(b.eventId)));
+    const last = art.versions[art.versions.length - 1];
+    const kinds = [];
+    const eventIds = [];
+    const markIds = [];
+    for (let v = 0; v < art.versions.length; v++) {
+      const ver = art.versions[v];
+      if (kinds.indexOf(ver.kind) === -1) kinds.push(ver.kind);
+      const ids = ver.eventIds || [];
+      for (let k = 0; k < ids.length; k++) {
+        if (ids[k] && eventIds.indexOf(ids[k]) === -1) eventIds.push(ids[k]);
+      }
+      if (ver.eventId && ver.kind !== "read") markIds.push(ver.eventId);
+    }
+    files.push({
+      path: art.path,
+      name: fileBase(art.path),
+      dir: fileDir(art.path),
+      session: (last && last.session) || "",
+      ts: (last && last.ts) || 0,
+      kind: primaryKind(art.versions),
+      kinds: kinds,
+      eventId: (last && last.eventId) || "",
+      eventIds: eventIds,
+      markIds: markIds,
+      versions: art.versions,
+      content: (last && last.content) || "",
+      diff: !!(last && last.diff),
+      imageSrc: (last && last.imageSrc) || ""
+    });
+  }
+  files.sort((a, b) => b.ts - a.ts || String(a.path).localeCompare(String(b.path)));
+  return files;
+}
+
+function primaryKind(versions) {
+  const rank = { written: 4, patched: 3, image: 2, read: 1 };
+  let best = versions[0] ? versions[0].kind : "written";
+  let score = rank[best] || 0;
+  for (let i = 0; i < versions.length; i++) {
+    const next = rank[versions[i].kind] || 0;
+    if (next > score) {
+      score = next;
+      best = versions[i].kind;
+    }
+  }
+  return best;
+}
+
+function pathKey(path) {
+  let value = String(path || "").trim();
+  if (value.length > 1) value = value.replace(/\/+$/, "");
+  return value;
+}
+
+function fileBase(path) {
+  const value = String(path || "");
+  const i = Math.max(value.lastIndexOf("/"), value.lastIndexOf("\\"));
+  return i >= 0 ? value.slice(i + 1) : value;
+}
+
+function fileDir(path) {
+  const value = String(path || "");
+  const i = Math.max(value.lastIndexOf("/"), value.lastIndexOf("\\"));
+  if (i <= 0) return "";
+  return value.slice(0, i);
+}
+
+function prettyPath(path) {
+  return String(path || "").replace(/^\/Users\/[^/]+/, "~");
 }
 
 function walkPayload(detail, out) {
@@ -2795,7 +3534,9 @@ function looseClosed(raw) {
     const i = match.index + match[0].length;
     if (raw.charAt(i) !== '"') continue;
     const read = readJsonString(raw, i + 1);
-    if (read.closed && fields[key] == null) fields[key] = read.value;
+    if (fields[key] == null && read.value && (read.closed || read.value.length > 24)) {
+      fields[key] = read.closed ? read.value : read.value + "…";
+    }
     re.lastIndex = read.index + (read.closed ? 1 : 0);
     if (re.lastIndex <= match.index) re.lastIndex = match.index + match[0].length;
   }
@@ -2838,7 +3579,10 @@ function firstField(bags, keys) {
 }
 
 function diffPath(text) {
-  const match = String(text || "").match(/^---\s+(?:a\/)?(.+)$/m) || String(text || "").match(/^\+\+\+\s+(?:b\/)?(.+)$/m);
+  const raw = String(text || "");
+  const named = raw.match(/^\*\*\*\s+(?:Update|Add|Delete)\s+File:\s*(.+)$/m);
+  if (named && named[1]) return named[1].trim();
+  const match = raw.match(/^---\s+(?:a\/)?(.+)$/m) || raw.match(/^\+\+\+\s+(?:b\/)?(.+)$/m);
   if (!match) return "";
   const path = match[1].trim();
   if (!path || path === "/dev/null") return "";
@@ -2857,13 +3601,17 @@ function sensitivePath(path) {
 }
 
 function looksLikeDiff(text) {
-  return /(^|\n)---\s/.test(text) || /(^|\n)\+\+\+\s/.test(text) || /(^|\n)@@/.test(text) || /(^|\n)[+-][^+-]/.test(text);
+  const value = String(text || "");
+  if (/\*\*\*\s+Begin Patch/.test(value)) return true;
+  if (/(^|\n)---\s/.test(value) && /(^|\n)\+\+\+\s/.test(value)) return true;
+  if (/(^|\n)@@/.test(value) && /(^|\n)[+-]/.test(value)) return true;
+  return false;
 }
 
 function looksLikeToolStub(text) {
   const value = String(text || "").trim();
   if (!value) return true;
-  if (value.length < 80 && /"bytes_written"|"dirs_created"|"id"\s*:/.test(value) && !looksLikeDiff(value)) return true;
+  if (value.length < 180 && /"bytes_written"|"dirs_created"|"files_modified"/.test(value) && !looksLikeDiff(value)) return true;
   return false;
 }
 
@@ -2902,18 +3650,222 @@ function loadableImage(value) {
   return "";
 }
 
-function sessionArtifactIndexes(art) {
-  const sid = art.session || "";
-  const idxs = [];
-  for (let i = 0; i < state.artifacts.length; i++) {
-    if ((state.artifacts[i].session || "") === sid) idxs.push(i);
+function artifactKindOn(art) {
+  const kinds = art.kinds || [art.kind];
+  for (let i = 0; i < kinds.length; i++) {
+    if (state.artifactKinds.has(kinds[i])) return true;
   }
-  return idxs;
+  return false;
 }
 
-function openArtifact(index) {
-  if (!state.artifacts[index]) return;
+function filteredArtifactIndexes() {
+  if (state.eventFilters.artifactsOnly === false && state.eventFilters.artifacts === false) return [];
+  const q = String(state.artifactQuery || "").trim().toLowerCase();
+  const out = [];
+  const list = state.artifacts || [];
+  for (let i = 0; i < list.length; i++) {
+    const art = list[i];
+    if (!artifactKindOn(art)) continue;
+    if (state.focusSession && !artifactInSession(art, state.focusSession)) continue;
+    const shown = artifactShown(art);
+    if (!shown) continue;
+    if (q) {
+      const hay = (art.path + " " + art.name + " " + (art.kinds || []).join(" ") + " " + (art.session || "") + " " + (shown.session || "")).toLowerCase();
+      if (hay.indexOf(q) < 0) continue;
+    }
+    out.push(i);
+  }
+  return out;
+}
+
+function sessionGroupLabel(sid) {
+  if (!sid) return "System";
+  const meta = state.sessionById.get(sid);
+  const model = meta && meta.model ? " · " + String(meta.model) : "";
+  return shortId(sid) + model;
+}
+
+function groupIndexes(indexes) {
+  const buckets = new Map();
+  const groups = [];
+  for (let n = 0; n < indexes.length; n++) {
+    const i = indexes[n];
+    const art = state.artifacts[i];
+    const shown = artifactShown(art);
+    const ts = (shown && shown.ts) || art.ts || 0;
+    const sessionKey = state.focusSession || (shown && shown.session) || art.session || "";
+    const key = state.artifactGroup === "dir" ? (art.dir || "(root)") : sessionKey;
+    let group = buckets.get(key);
+    if (!group) {
+      const label = state.artifactGroup === "dir" ? (prettyPath(art.dir) || "(root)") : sessionGroupLabel(sessionKey);
+      group = { key: key, label: label, items: [], ts: 0 };
+      buckets.set(key, group);
+      groups.push(group);
+    }
+    group.items.push(i);
+    if (ts > group.ts) group.ts = ts;
+  }
+  for (let g = 0; g < groups.length; g++) {
+    groups[g].items.sort((a, b) => {
+      const av = artifactShown(state.artifacts[a]);
+      const bv = artifactShown(state.artifacts[b]);
+      const at = (av && av.ts) || state.artifacts[a].ts || 0;
+      const bt = (bv && bv.ts) || state.artifacts[b].ts || 0;
+      return bt - at || String(state.artifacts[a].name).localeCompare(String(state.artifacts[b].name));
+    });
+  }
+  groups.sort((a, b) => b.ts - a.ts || String(a.label).localeCompare(String(b.label)));
+  return groups;
+}
+
+function visibleArtifactIndexes() {
+  const groups = groupIndexes(filteredArtifactIndexes());
+  const out = [];
+  for (let g = 0; g < groups.length; g++) {
+    const items = groups[g].items;
+    for (let i = 0; i < items.length; i++) out.push(items[i]);
+  }
+  return out;
+}
+
+function kindMark(kind) {
+  if (kind === "patched") return "P";
+  if (kind === "read") return "R";
+  if (kind === "image") return "I";
+  return "W";
+}
+
+function paintArtifactControls() {
+  const counts = { written: 0, patched: 0, read: 0, image: 0 };
+  const list = state.artifacts || [];
+  for (let i = 0; i < list.length; i++) {
+    const kinds = list[i].kinds || [list[i].kind];
+    for (let k = 0; k < kinds.length; k++) {
+      if (counts[kinds[k]] != null) counts[kinds[k]] += 1;
+    }
+  }
+  const chips = document.querySelectorAll("#artifact-chips [data-kind]");
+  for (let i = 0; i < chips.length; i++) {
+    const kind = chips[i].dataset.kind;
+    chips[i].classList.toggle("on", state.artifactKinds.has(kind));
+    const name = kind.charAt(0).toUpperCase() + kind.slice(1);
+    chips[i].textContent = name + " " + (counts[kind] || 0);
+  }
+  const groups = document.querySelectorAll("#artifact-groups [data-group]");
+  for (let i = 0; i < groups.length; i++) {
+    groups[i].classList.toggle("on", groups[i].dataset.group === state.artifactGroup);
+  }
+}
+
+function renderArtifacts() {
+  renderSessionChip();
+  const list = state.artifacts || [];
+  const shown = filteredArtifactIndexes();
+  const label = shown.length === list.length ? "(" + list.length + ")" : "(" + shown.length + "/" + list.length + ")";
+  setText($("artifact-count"), label);
+  if (state.streamMode === "files") setText($("stream-count"), String(shown.length));
+  paintArtifactControls();
+  const root = $("artifacts-body");
+  if (!root) return;
+  const scroller = $("stream-scroll") || root;
+  const follow = scroller.scrollTop < 24;
+  if (!list.length) {
+    root.innerHTML = '<div class="empty-note">No artifacts<span>Writes, patches, reads, images</span></div>';
+    return;
+  }
+  if (state.eventFilters.artifacts === false && !state.eventFilters.artifactsOnly) {
+    root.innerHTML = '<div class="empty-note">Artifacts hidden<span>Turn the Artifacts chip back on</span></div>';
+    return;
+  }
+  if (!shown.length) {
+    if (String(state.artifactQuery || "").trim()) {
+      root.innerHTML = '<div class="empty-note">Nothing matches<span>Change the filter or kind chips</span></div>';
+      return;
+    }
+    const waiting = state.focusSession ? "Nothing in this session yet" : "No files yet";
+    root.innerHTML = '<div class="empty-note">' + waiting + "<span>Files appear as the playhead reaches them</span></div>";
+    return;
+  }
+  const groups = groupIndexes(shown);
+  let html = "";
+  for (let g = 0; g < groups.length; g++) {
+    const group = groups[g];
+    html += '<div class="art-sec">' + esc(group.label) + " · " + group.items.length + "</div>";
+    for (let k = 0; k < group.items.length; k++) {
+      const i = group.items[k];
+      const art = list[i];
+      const view = artifactShown(art) || art;
+      const kind = view.kind || art.kind || "written";
+      let n = 0;
+      const versions = art.versions || [];
+      for (let v = 0; v < versions.length; v++) {
+        if ((versions[v].ts || 0) <= state.play + 0.0005) n += 1;
+      }
+      if (!n) n = 1;
+      const hot = i === state.hoverArt ? " hot" : "";
+      html +=
+        '<button type="button" class="art' + hot + '" data-art="' + i + '" data-sel="' + esc(view.eventId || art.eventId || "") + '">' +
+        '<span class="art-kind ' + esc(kind) + '">' + kindMark(kind) + "</span>" +
+        '<span class="art-file"><span class="base" title="' + esc(art.path) + '">' + esc(art.name || fileBase(art.path)) + "</span>" +
+        '<span class="dir" title="' + esc(art.dir || art.path) + '">' + esc(prettyPath(art.dir || "·")) + "</span></span>" +
+        '<span class="meta"><span class="n">' + n + (n === 1 ? " edit" : " edits") + "</span>" +
+        '<span class="t">' + esc(fmtClock(view.ts || art.ts, false)) + "</span></span></button>";
+    }
+  }
+  root.innerHTML = html;
+  if (follow) scroller.scrollTop = 0;
+}
+
+function applyFolds() {
+  const ids = ["panel-tools", "panel-alerts", "panel-mesh"];
+  for (let i = 0; i < ids.length; i++) {
+    const el = $(ids[i]);
+    if (!el) continue;
+    el.classList.toggle("fold", !!state.artifactFocus);
+    const toggle = el.querySelector(".fold-toggle");
+    if (toggle) toggle.textContent = el.classList.contains("fold") ? "Show" : "Hide";
+  }
+}
+
+function syncArtifactPanel() {
+  const open = !!state.artifactPanelOpen;
+  document.body.classList.toggle("arts-focus", !!(state.artifactFocus && open));
+  const panel = $("panel-artifacts");
+  if (panel) panel.classList.toggle("collapsed", !open);
+  const focus = $("artifact-focus");
+  if (focus) focus.textContent = state.artifactFocus ? "All panels" : "Focus";
+  const hide = $("artifact-collapse");
+  if (hide) hide.textContent = open ? "Hide" : "Show";
+}
+
+function syncArtifactHover() {
+  const rows = document.querySelectorAll("#artifacts-body [data-art]");
+  for (let i = 0; i < rows.length; i++) {
+    const on = Number(rows[i].dataset.art) === state.hoverArt;
+    if (rows[i].classList.contains("hot") !== on) rows[i].classList.toggle("hot", on);
+  }
+}
+
+function versionForEvent(index, eventId) {
+  const art = state.artifacts[index];
+  if (!art || !art.versions) return -1;
+  for (let i = 0; i < art.versions.length; i++) {
+    const ids = art.versions[i].eventIds || [];
+    if (ids.indexOf(eventId) !== -1 || art.versions[i].eventId === eventId) return i;
+  }
+  return Math.max(0, art.versions.length - 1);
+}
+
+function openArtifact(index, version) {
+  const art = state.artifacts[index];
+  if (!art) return;
   state.artifactCursor = index;
+  if (version == null || version < 0 || version >= (art.versions || []).length) {
+    state.artifactVersion = Math.max(0, (art.versions || []).length - 1);
+  } else {
+    state.artifactVersion = version;
+  }
+  state.artifactRaw = false;
   fillArtifactModal();
 }
 
@@ -2926,74 +3878,390 @@ function closeArtifact() {
 function stepArtifact(dir) {
   const art = state.artifacts[state.artifactCursor];
   if (!art) return;
-  const mates = sessionArtifactIndexes(art);
-  const at = mates.indexOf(state.artifactCursor);
-  const next = mates[at + dir];
+  const vis = visibleArtifactIndexes();
+  const at = vis.indexOf(state.artifactCursor);
+  if (at < 0) return;
+  const next = vis[at + dir];
   if (next == null) return;
   const nxt = state.artifacts[next];
-  if (nxt && nxt.eventId && state.eventById.has(nxt.eventId)) selectEvent(nxt.eventId);
-  openArtifact(next);
+  openArtifact(next, -1);
+  if (nxt && nxt.eventId) selectEvent(nxt.eventId, { keepModal: true });
 }
 
 function fillArtifactModal() {
   const art = state.artifacts[state.artifactCursor];
   const modal = $("artifact-modal");
   if (!art || !modal) return;
+  const versions = art.versions || [];
+  if (state.artifactVersion < 0 || state.artifactVersion >= versions.length) {
+    state.artifactVersion = Math.max(0, versions.length - 1);
+  }
+  const ver = versions[state.artifactVersion] || {
+    kind: art.kind,
+    session: art.session,
+    ts: art.ts,
+    eventId: art.eventId,
+    content: art.content,
+    diff: art.diff,
+    imageSrc: art.imageSrc,
+    tool: ""
+  };
   modal.hidden = false;
-  setText($("artifact-kind"), art.kind);
-  setText($("artifact-path"), art.path);
+  setText($("artifact-kind"), ver.kind || art.kind || "");
+  setText($("artifact-name"), art.name || fileBase(art.path));
+  const crumb = $("artifact-crumb");
+  crumb.textContent = prettyPath(art.dir || "");
+  crumb.title = art.path || "";
   const meta = $("artifact-meta");
-  const sid = art.session ? shortId(art.session) : "system";
-  meta.textContent = sid + "  ·  " + fmtClock(art.ts, true);
-  meta.title = art.session || "";
-  const mates = sessionArtifactIndexes(art);
-  const at = mates.indexOf(state.artifactCursor);
-  setText($("artifact-pos"), (at + 1) + " / " + mates.length);
+  const sid = ver.session ? shortId(ver.session) : "system";
+  meta.textContent = sid + "  ·  " + fmtClock(ver.ts || art.ts, true) + (ver.tool ? "  ·  " + ver.tool : "");
+  meta.title = ver.session || art.session || "";
+  const vis = visibleArtifactIndexes();
+  let at = vis.indexOf(state.artifactCursor);
+  if (at < 0) at = 0;
+  const total = vis.length || 1;
+  setText($("artifact-pos"), (at + 1) + " / " + total);
   $("artifact-prev").disabled = at <= 0;
-  $("artifact-next").disabled = at < 0 || at >= mates.length - 1;
-  renderArtifactBody(art);
+  $("artifact-next").disabled = at >= total - 1;
+  const rawBtn = $("artifact-raw");
+  const markdown = isMarkdownFile(art.path) && !ver.diff && !(ver.kind === "image" && ver.imageSrc);
+  rawBtn.hidden = !markdown;
+  rawBtn.textContent = state.artifactRaw ? "Formatted" : "Raw";
+  const jump = $("artifact-jump");
+  if (jump) jump.disabled = !ver.eventId;
+  renderVersionTabs(art);
+  renderArtifactBody(art, ver);
 }
 
-function renderArtifactBody(art) {
+function renderVersionTabs(art) {
+  const bar = $("artifact-versions");
+  if (!bar) return;
+  bar.replaceChildren();
+  const versions = art.versions || [];
+  if (versions.length < 2) {
+    bar.hidden = true;
+    return;
+  }
+  bar.hidden = false;
+  for (let i = 0; i < versions.length; i++) {
+    const ver = versions[i];
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.dataset.ver = String(i);
+    btn.textContent = "v" + (i + 1) + "  " + ver.kind + "  " + fmtClock(ver.ts, false);
+    btn.title = (ver.tool || ver.kind) + (ver.session ? " · " + shortId(ver.session) : "");
+    if (i === state.artifactVersion) btn.className = "on";
+    bar.appendChild(btn);
+  }
+}
+
+function renderArtifactBody(art, ver) {
   const body = $("artifact-body");
   if (!body) return;
   body.replaceChildren();
-  if (art.kind === "image" && art.imageSrc) {
+  const version = ver || {};
+  if ((version.kind === "image" || version.imageSrc) && version.imageSrc) {
     const img = document.createElement("img");
-    img.alt = art.path;
-    img.src = art.imageSrc;
+    img.alt = art.path || "image";
+    img.src = version.imageSrc;
     img.addEventListener("error", () => {
       body.replaceChildren();
-      const note = document.createElement("p");
-      note.className = "artifact-missing";
-      note.textContent = "content not captured in log";
-      body.appendChild(note);
+      appendMissing(body);
     });
     body.appendChild(img);
     return;
   }
-  if (art.content) {
-    const pre = document.createElement("pre");
-    if (art.diff || looksLikeDiff(art.content)) {
-      const lines = art.content.split("\n");
-      for (let i = 0; i < lines.length; i++) {
-        const line = document.createElement("div");
-        const text = lines[i];
-        line.textContent = text.length ? text : " ";
-        if (text.startsWith("+") && !text.startsWith("+++")) line.className = "diff-add";
-        else if (text.startsWith("-") && !text.startsWith("---")) line.className = "diff-del";
-        pre.appendChild(line);
-      }
-    } else {
-      pre.textContent = art.content;
-    }
-    body.appendChild(pre);
+  const text = redact(version.content || "");
+  if (!text) {
+    appendMissing(body);
     return;
   }
+  if (version.diff || looksLikeDiff(text)) {
+    body.appendChild(renderLined(text, "diff"));
+    return;
+  }
+  if (isMarkdownFile(art.path) && !state.artifactRaw) {
+    body.appendChild(renderMarkdown(text));
+    return;
+  }
+  const pretty = prettyJson(text, art.path);
+  body.appendChild(renderLined(pretty || stripReadPrefix(text), "plain"));
+}
+
+function appendMissing(body) {
   const note = document.createElement("p");
   note.className = "artifact-missing";
   note.textContent = "content not captured in log";
   body.appendChild(note);
+}
+
+function isMarkdownFile(path) {
+  return /\.(md|markdown|mdown)$/i.test(String(path || ""));
+}
+
+function prettyJson(text, path) {
+  const value = String(text || "").trim();
+  const jsonName = /\.json$/i.test(String(path || ""));
+  if (!jsonName && value.charAt(0) !== "{" && value.charAt(0) !== "[") return "";
+  if (value.charAt(0) !== "{" && value.charAt(0) !== "[") return "";
+  try {
+    return JSON.stringify(JSON.parse(value), null, 2);
+  } catch (err) {
+    return "";
+  }
+}
+
+function stripReadPrefix(text) {
+  const lines = String(text || "").split("\n");
+  if (!lines.length) return text;
+  let hits = 0;
+  for (let i = 0; i < lines.length; i++) if (/^\d+\|/.test(lines[i])) hits++;
+  if (hits / lines.length < 0.6) return text;
+  return lines.map((line) => line.replace(/^\d+\|/, "")).join("\n");
+}
+
+function renderLined(text, mode) {
+  const pre = document.createElement("pre");
+  pre.className = mode === "diff" ? "code diff" : "code";
+  const lines = String(text || "").split("\n");
+  const cap = 2500;
+  const count = Math.min(lines.length, cap);
+  let plainNo = 1;
+  for (let i = 0; i < count; i++) {
+    const raw = lines[i];
+    const row = document.createElement("div");
+    const gutter = document.createElement("span");
+    gutter.className = "gutter";
+    const src = document.createElement("span");
+    src.className = "src";
+    if (mode === "diff") {
+      const cls = classifyDiffLine(raw);
+      row.className = "ln " + cls;
+      if (cls === "add") {
+        gutter.textContent = "+";
+        src.textContent = raw.slice(1);
+      } else if (cls === "del") {
+        gutter.textContent = "−";
+        src.textContent = raw.slice(1);
+      } else if (cls === "hunk" || cls === "meta") {
+        gutter.textContent = cls === "hunk" ? "@@" : "";
+        src.textContent = raw;
+      } else {
+        gutter.textContent = String(plainNo++);
+        src.textContent = raw.charAt(0) === " " ? raw.slice(1) : raw;
+      }
+    } else {
+      row.className = "ln";
+      gutter.textContent = String(i + 1);
+      src.textContent = raw.length ? raw : " ";
+    }
+    if (!src.textContent) src.textContent = " ";
+    row.appendChild(gutter);
+    row.appendChild(src);
+    pre.appendChild(row);
+  }
+  if (lines.length > cap) {
+    const more = document.createElement("div");
+    more.className = "ln meta";
+    more.textContent = "… " + (lines.length - cap) + " more lines";
+    pre.appendChild(more);
+  }
+  return pre;
+}
+
+function classifyDiffLine(line) {
+  if (line.startsWith("***") || line.startsWith("diff ") || line.startsWith("index ") || line.startsWith("---") || line.startsWith("+++")) return "meta";
+  if (line.startsWith("@@")) return "hunk";
+  if (line.startsWith("+")) return "add";
+  if (line.startsWith("-")) return "del";
+  return "ctx";
+}
+
+function renderMarkdown(src) {
+  const root = document.createElement("div");
+  root.className = "md";
+  const text = String(src || "").replace(/\r\n/g, "\n");
+  const chunks = text.split("```");
+  for (let i = 0; i < chunks.length; i++) {
+    if (i % 2 === 1) {
+      let body = chunks[i];
+      const nl = body.indexOf("\n");
+      if (nl >= 0) body = body.slice(nl + 1);
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.textContent = body.replace(/\n$/, "");
+      pre.appendChild(code);
+      root.appendChild(pre);
+    } else {
+      appendMarkdownBlocks(root, chunks[i]);
+    }
+  }
+  return root;
+}
+
+function appendMarkdownBlocks(root, text) {
+  const blocks = String(text || "").split(/\n{2,}/);
+  for (let b = 0; b < blocks.length; b++) {
+    const lines = blocks[b].split("\n");
+    const filled = lines.filter((line) => line.trim());
+    if (!filled.length) continue;
+    if (filled.every((line) => /^#{1,3}\s+/.test(line.trim()))) {
+      for (let i = 0; i < lines.length; i++) {
+        const match = /^(#{1,3})\s+(.*)$/.exec(lines[i].trim());
+        if (!match) continue;
+        const h = document.createElement("h" + match[1].length);
+        appendInline(h, match[2]);
+        root.appendChild(h);
+      }
+      continue;
+    }
+    if (isTableBlock(filled)) {
+      root.appendChild(renderTable(filled));
+      continue;
+    }
+    if (filled.every((line) => /^\s*[-*]\s+/.test(line) || /^\s*\d+\.\s+/.test(line))) {
+      const ordered = /^\s*\d+\.\s+/.test(filled[0]);
+      const list = document.createElement(ordered ? "ol" : "ul");
+      for (let i = 0; i < lines.length; i++) {
+        const match = /^\s*(?:[-*]|\d+\.)\s+(.*)$/.exec(lines[i]);
+        if (!match) continue;
+        const li = document.createElement("li");
+        appendInline(li, match[1]);
+        list.appendChild(li);
+      }
+      root.appendChild(list);
+      continue;
+    }
+    const p = document.createElement("p");
+    appendInline(p, lines.join("\n"));
+    root.appendChild(p);
+  }
+}
+
+function isTableBlock(lines) {
+  if (lines.length < 2) return false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.charAt(0) !== "|" || line.charAt(line.length - 1) !== "|") return false;
+  }
+  return true;
+}
+
+function renderTable(lines) {
+  const table = document.createElement("table");
+  let started = false;
+  for (let i = 0; i < lines.length; i++) {
+    const cells = lines[i].trim().replace(/^\|/, "").replace(/\|$/, "").split("|");
+    if (cells.every((cell) => /^\s*:?-{3,}:?\s*$/.test(cell))) continue;
+    const tr = document.createElement("tr");
+    for (let c = 0; c < cells.length; c++) {
+      const cell = document.createElement(!started ? "th" : "td");
+      cell.textContent = cells[c].trim();
+      tr.appendChild(cell);
+    }
+    table.appendChild(tr);
+    started = true;
+  }
+  return table;
+}
+
+function appendInline(parent, text) {
+  const lines = String(text || "").split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    if (i) parent.appendChild(document.createElement("br"));
+    appendInlineLine(parent, lines[i]);
+  }
+}
+
+function appendInlineLine(parent, text) {
+  const re = /`([^`]+)`/g;
+  let last = 0;
+  let match;
+  while ((match = re.exec(text))) {
+    if (match.index > last) parent.appendChild(document.createTextNode(text.slice(last, match.index)));
+    const code = document.createElement("code");
+    code.textContent = match[1];
+    parent.appendChild(code);
+    last = match.index + match[0].length;
+  }
+  if (last < text.length) parent.appendChild(document.createTextNode(text.slice(last)));
+}
+
+function copyArtifact() {
+  const art = state.artifacts[state.artifactCursor];
+  if (!art) return;
+  const ver = (art.versions || [])[state.artifactVersion] || art;
+  let text = ver.content || "";
+  if (!text && ver.imageSrc) text = ver.imageSrc;
+  if (text && !ver.diff && isMarkdownFile(art.path)) text = text;
+  else if (text && !ver.diff) {
+    const pretty = prettyJson(text, art.path);
+    if (pretty) text = pretty;
+  }
+  text = redact(text);
+  const btn = $("artifact-copy");
+  const done = (ok) => {
+    if (!btn) return;
+    btn.textContent = ok ? "Copied" : "Copy failed";
+    setTimeout(() => { if (btn.textContent !== "Copy") btn.textContent = "Copy"; }, 900);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => done(true)).catch(() => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function fallbackCopy(text, done) {
+  const area = document.createElement("textarea");
+  area.value = text;
+  area.setAttribute("readonly", "");
+  area.style.position = "fixed";
+  area.style.left = "-9999px";
+  document.body.appendChild(area);
+  area.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
+  area.remove();
+  done(ok);
+}
+
+let fileGlyphTex = null;
+function fileGlyphTexture() {
+  if (fileGlyphTex) return fileGlyphTex;
+  const canvas = document.createElement("canvas");
+  canvas.width = 64;
+  canvas.height = 80;
+  const g = canvas.getContext("2d");
+  g.clearRect(0, 0, 64, 80);
+  g.fillStyle = "#ffb34a";
+  g.strokeStyle = "#6a3d08";
+  g.lineWidth = 3;
+  g.beginPath();
+  g.moveTo(8, 6);
+  g.lineTo(36, 6);
+  g.lineTo(56, 26);
+  g.lineTo(56, 74);
+  g.lineTo(8, 74);
+  g.closePath();
+  g.fill();
+  g.stroke();
+  g.fillStyle = "#e08a28";
+  g.beginPath();
+  g.moveTo(36, 6);
+  g.lineTo(56, 26);
+  g.lineTo(36, 26);
+  g.closePath();
+  g.fill();
+  g.fillStyle = "#2a1808";
+  g.fillRect(16, 38, 30, 3);
+  g.fillRect(16, 46, 24, 3);
+  g.fillRect(16, 54, 28, 3);
+  const tex = new THREE.CanvasTexture(canvas);
+  if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+  fileGlyphTex = tex;
+  return tex;
 }
 
 function show(doc) {
@@ -3019,6 +4287,7 @@ function show(doc) {
   state.offKind = new Set();
   state.selected = null;
   state.selectedLane = null;
+  state.focusSession = null;
   state.hoverId = null;
   state.delegation = Array.isArray(doc.delegation) ? doc.delegation : [];
   state.pairs = pairTools(state.events);
@@ -3213,6 +4482,9 @@ function renderStatic() {
   renderArtifacts();
   renderAlerts();
   renderMesh();
+  renderSessionChip();
+  paintEventFilters();
+  syncStreamMode();
   renderInspector();
   cacheHotRows();
   syncSelectedClasses();
@@ -3361,6 +4633,7 @@ function renderSpark() {
   }
   const bins = new Array(buckets).fill(0);
   for (const ev of state.events) {
+    if (!eventPassesFilter(ev)) continue;
     let i = Math.floor(((ev.ts_unix - state.t0) / span) * buckets);
     if (i < 0) i = 0;
     if (i >= buckets) i = buckets - 1;
@@ -3384,29 +4657,15 @@ function renderSpark() {
     '<div class="spark-scale"><span>0</span><span>' + esc(label) + "</span><span>" + max + "</span></div>";
 }
 
-function renderArtifacts() {
-  const list = state.artifacts || [];
-  setText($("artifact-count"), "(" + list.length + ")");
-  const root = $("artifacts-body");
-  if (!root) return;
-  if (!list.length) {
-    root.innerHTML = '<div class="empty-note">No artifacts<span>Writes, patches, and images</span></div>';
-    return;
-  }
-  let html = "";
-  for (let i = 0; i < list.length; i++) {
-    const art = list[i];
-    const sid = art.session ? shortId(art.session) : "SYSTEM";
-    html +=
-      '<button type="button" class="art" data-art="' + i + '" data-sel="' + esc(art.eventId || "") + '">' +
-      '<i class="dot"></i><span><span class="path" title="' + esc(art.path) + '">' + esc(art.path) + "</span>" +
-      '<span class="sub">' + esc(art.kind) + " · " + esc(sid) + " · " + esc(fmtClock(art.ts, false)) + "</span></span></button>";
-  }
-  root.innerHTML = html;
-}
 
 function renderTools() {
-  const pairs = state.pairs;
+  const pairs = [];
+  for (let i = 0; i < state.pairs.length; i++) {
+    const pair = state.pairs[i];
+    if (state.focusSession && pair.session !== state.focusSession) continue;
+    if (!eventPassesFilter(pair.call) && !eventPassesFilter(pair.result)) continue;
+    pairs.push(pair);
+  }
   setText($("tool-count"), pairs.length + "");
   if (!pairs.length) {
     $("tools-body").innerHTML = '<div class="nominal"><i class="dot dim"></i><div><b>NONE</b><div class="sub">NO TOOL CALLS</div></div></div>';
@@ -3427,7 +4686,7 @@ function renderTools() {
 }
 
 function renderAlerts() {
-  const alerts = state.events.filter(isAlert);
+  const alerts = state.events.filter((ev) => isAlert(ev) && eventPassesFilter(ev) && (!state.focusSession || ev.session_id === state.focusSession));
   setText($("alert-count"), alerts.length + "");
   if (!alerts.length) {
     $("alerts-body").innerHTML = '<div class="nominal"><i class="dot"></i><div><b>NOMINAL</b><div class="sub">NO ERRORS IN WINDOW</div></div></div>';
@@ -3448,6 +4707,8 @@ function renderAlerts() {
 function renderMesh() {
   const links = new Map();
   for (const pair of state.pairs) {
+    if (state.focusSession && pair.session !== state.focusSession) continue;
+    if (!eventPassesFilter(pair.call) && !eventPassesFilter(pair.result)) continue;
     const sid = pair.session || "system";
     const key = sid + "\0" + pair.tool;
     links.set(key, (links.get(key) || 0) + 1);
@@ -3455,20 +4716,26 @@ function renderMesh() {
   const sessions = [];
   const seenS = new Set();
   for (const pair of state.pairs) {
+    if (state.focusSession && pair.session !== state.focusSession) continue;
+    if (!eventPassesFilter(pair.call) && !eventPassesFilter(pair.result)) continue;
     const sid = pair.session || "";
     if (!sid || seenS.has(sid)) continue;
     seenS.add(sid);
     sessions.push(sid);
   }
-  for (const s of state.sessions) {
-    if (s.id && !seenS.has(String(s.id)) && sessions.length < 8) {
-      seenS.add(String(s.id));
-      sessions.push(String(s.id));
+  if (!state.focusSession) {
+    for (const s of state.sessions) {
+      if (s.id && !seenS.has(String(s.id)) && sessions.length < 8) {
+        seenS.add(String(s.id));
+        sessions.push(String(s.id));
+      }
     }
   }
   const tools = [];
   const seenT = new Set();
   for (const pair of state.pairs) {
+    if (state.focusSession && pair.session !== state.focusSession) continue;
+    if (!eventPassesFilter(pair.call) && !eventPassesFilter(pair.result)) continue;
     if (seenT.has(pair.tool)) continue;
     seenT.add(pair.tool);
     tools.push(pair.tool);
@@ -3568,10 +4835,11 @@ function renderPlayChrome() {
   $("play-meter").style.width = (p * 100).toFixed(2) + "%";
   setText($("replay-state"), state.playing ? "RUN" : "HOLD");
   const idx = lastIndexAtOrBefore(state.play);
-  const key = idx + ":" + (state.selected || "");
+  const key = viewKey(idx);
   if (key !== logKey) {
     logKey = key;
     renderLog(idx);
+    if (state.streamMode === "files") renderArtifacts();
   }
   syncHotRows();
   drawTimeline();
@@ -3583,28 +4851,49 @@ function renderPlayChrome() {
 
 function renderLog(idx) {
   const body = $("log-body");
+  if (!body) return;
+  const scroller = $("stream-scroll") || body;
+  const follow = scroller.scrollTop < 24;
   if (idx < 0) {
     body.innerHTML = '<div class="empty-note">Waiting for the playhead<span>Before the first event</span></div>';
-    setText($("log-count"), "0");
+    if (state.streamMode !== "files") setText($("stream-count"), "0");
     return;
   }
-  const start = Math.max(0, idx - 64);
-  const rows = state.events.slice(start, idx + 1);
-  setText($("log-count"), rows.length + " / " + (idx + 1));
+  const rows = [];
+  for (let i = idx; i >= 0 && rows.length < 80; i--) {
+    const ev = state.events[i];
+    if (!eventPassesFilter(ev)) continue;
+    if (state.focusSession && ev.session_id !== state.focusSession) continue;
+    rows.push(ev);
+  }
+  if (state.streamMode !== "files") setText($("stream-count"), rows.length + "");
+  if (!rows.length) {
+    body.innerHTML = '<div class="empty-note">No events in view<span>Filters or the playhead are hiding them</span></div>';
+    return;
+  }
   let html = "";
   for (let i = 0; i < rows.length; i++) {
     const ev = rows[i];
-    const cls = logClass(ev) + (i === rows.length - 1 ? " now" : "") + (ev.id === state.selected ? " sel" : "");
+    const cat = eventCategory(ev);
+    const cls = logClass(ev) + (cat === "artifacts" ? " file" : "") + (i === 0 ? " now" : "") + (ev.id === state.selected ? " sel" : "");
     html +=
       '<button type="button" class="log-line ' + cls + '" data-sel="' + esc(ev.id) + '">' +
       "<span class=\"ts\">" + esc(fmtClock(ev.ts_unix, true)) + "</span>" +
-      "<span class=\"lvl\">" + esc(ev.level || "") + "</span>" +
+      "<span class=\"lvl\">" + esc(traceLabel(ev, cat)) + "</span>" +
       "<span class=\"msg\">" + esc(ev.title || ev.detail || ev.kind) + "</span></button>";
   }
-  const follow = body.scrollHeight - body.scrollTop - body.clientHeight < 28;
-  const prev = body.scrollTop;
   body.innerHTML = html;
-  body.scrollTop = follow ? body.scrollHeight : prev;
+  if (follow) scroller.scrollTop = 0;
+}
+
+function traceLabel(ev, cat) {
+  if (cat === "artifacts") return "FILE";
+  if (cat === "tool_call") return "CALL";
+  if (cat === "tool_result") return "RESULT";
+  if (cat === "message") return ev.kind === "user" ? "USER" : "ASSIST";
+  if (cat === "delegation") return "DELEG";
+  if (cat === "alert") return String(ev.level || ev.kind || "ALERT").slice(0, 7).toUpperCase();
+  return String(ev.kind || "event").replace(/_/g, " ").slice(0, 8).toUpperCase();
 }
 
 function logClass(ev) {
@@ -3644,8 +4933,10 @@ function cacheHotRows() {
 }
 
 function syncSelectedClasses() {
+  const artIdx = state.selected ? state.artifactByEvent.get(state.selected) : null;
   for (const el of document.querySelectorAll("[data-sel]")) {
-    const on = el.dataset.sel === state.selected || el.dataset.sel === state.selectedLane;
+    let on = el.dataset.sel === state.selected || el.dataset.sel === state.selectedLane;
+    if (!on && el.dataset.art != null && el.dataset.art !== "" && artIdx != null && Number(el.dataset.art) === artIdx) on = true;
     el.classList.toggle("sel", on);
   }
 }
@@ -3669,6 +4960,7 @@ function drawTimeline() {
   const bins = new Float32Array(N);
   const err = new Float32Array(N);
   for (const ev of state.events) {
+    if (!eventPassesFilter(ev)) continue;
     let i = Math.floor(((ev.ts_unix - state.t0) / span) * N);
     if (i < 0) i = 0;
     if (i >= N) i = N - 1;
@@ -3840,13 +5132,14 @@ function frameBrush() {
   syncFitButton();
 }
 
-function selectEvent(id) {
-  closeArtifact();
+function selectEvent(id, opts) {
+  if (!(opts && opts.keepModal)) closeArtifact();
   const ev = state.eventById.get(id);
   if (!ev) return;
   const node = state.nodeById.get(id);
   state.selected = id;
   state.selectedLane = node ? node.laneId : ev.session_id ? "s:" + ev.session_id : null;
+  state.focusSession = ev.session_id || null;
   state.playing = false;
   syncPlayButton();
   markInteract();
@@ -3867,21 +5160,23 @@ function selectEvent(id) {
     setHint("Event framed. FIT returns to the full scene.", false);
   }
   renderInspector();
-  syncSelectedClasses();
   markHotArcs();
-  renderMesh();
-  logKey = "";
+  refreshFocusViews();
 }
 
 function selectLane(id) {
   closeArtifact();
   const lane = state.lanes.find((l) => l.id === id);
+  state.selected = null;
+  state.selectedLane = lane ? id : null;
+  state.focusSession = id && id.indexOf("s:") === 0 ? id.slice(2) : null;
   if (!lane) {
     setHint("No visible events on that track.", true);
+    renderInspector();
+    markHotArcs();
+    refreshFocusViews();
     return;
   }
-  state.selected = null;
-  state.selectedLane = id;
   markInteract();
   const x0 = timeToX(lane.a);
   const x1 = timeToX(lane.b);
@@ -3897,19 +5192,18 @@ function selectLane(id) {
   state.playing = true;
   syncPlayButton();
   renderInspector();
-  syncSelectedClasses();
   markHotArcs();
-  renderMesh();
+  refreshFocusViews();
 }
 
 function clearSelection() {
   closeArtifact();
   state.selected = null;
   state.selectedLane = null;
+  state.focusSession = null;
   inspector.hidden = true;
-  syncSelectedClasses();
   markHotArcs();
-  renderMesh();
+  refreshFocusViews();
 }
 
 function pickNode(clientX, clientY) {
@@ -3945,6 +5239,10 @@ function pickLane(clientX, clientY) {
 
 let drag = null;
 function wire() {
+  loadEventFilters();
+  paintEventFilters();
+  syncStreamMode();
+  applyFolds();
   $("btn-open").addEventListener("click", () => $("file-input").click());
   $("file-input").addEventListener("change", () => {
     readFile($("file-input").files && $("file-input").files[0]);
@@ -4017,14 +5315,122 @@ function wire() {
     const index = Number(row.dataset.art);
     const art = state.artifacts[index];
     if (!art) return;
-    if (art.eventId) selectEvent(art.eventId);
-    openArtifact(index);
+    const view = artifactShown(art);
+    let version = -1;
+    if (view && art.versions) {
+      for (let i = 0; i < art.versions.length; i++) {
+        if (art.versions[i] === view) {
+          version = i;
+          break;
+        }
+      }
+    }
+    openArtifact(index, version);
+    const eventId = (view && view.eventId) || art.eventId;
+    if (eventId) selectEvent(eventId, { keepModal: true });
+  });
+  $("artifacts-body").addEventListener("pointerover", (e) => {
+    const row = e.target.closest("[data-art]");
+    if (!row) return;
+    const index = Number(row.dataset.art);
+    const art = state.artifacts[index];
+    if (!art) return;
+    state.hoverArt = index;
+    state.hoverFrom = "panel";
+    state.hoverId = art.eventId || null;
+  });
+  $("artifacts-body").addEventListener("pointerleave", () => {
+    if (state.hoverFrom === "panel") {
+      state.hoverFrom = "";
+      state.hoverArt = -1;
+      state.hoverId = null;
+    }
+  });
+  $("artifact-filter").addEventListener("input", (e) => {
+    state.artifactQuery = e.target.value || "";
+    renderArtifacts();
+  });
+  $("artifact-chips").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-kind]");
+    if (!btn) return;
+    const kind = btn.dataset.kind;
+    if (state.artifactKinds.has(kind)) state.artifactKinds.delete(kind);
+    else state.artifactKinds.add(kind);
+    renderArtifacts();
+  });
+  $("artifact-groups").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-group]");
+    if (!btn) return;
+    state.artifactGroup = btn.dataset.group;
+    renderArtifacts();
+  });
+  $("artifact-focus").addEventListener("click", () => {
+    state.artifactFocus = !state.artifactFocus;
+    if (state.artifactFocus) state.artifactPanelOpen = true;
+    applyFolds();
+    syncArtifactPanel();
+  });
+  $("artifact-collapse").addEventListener("click", () => {
+    state.artifactPanelOpen = !state.artifactPanelOpen;
+    syncArtifactPanel();
   });
   $("artifact-close").addEventListener("click", () => closeArtifact());
   $("artifact-prev").addEventListener("click", () => stepArtifact(-1));
   $("artifact-next").addEventListener("click", () => stepArtifact(1));
+  $("artifact-copy").addEventListener("click", () => copyArtifact());
+  $("artifact-raw").addEventListener("click", () => {
+    state.artifactRaw = !state.artifactRaw;
+    fillArtifactModal();
+  });
+  $("artifact-jump").addEventListener("click", () => {
+    const current = state.artifacts[state.artifactCursor];
+    const ver = current && current.versions ? current.versions[state.artifactVersion] : null;
+    if (ver && ver.eventId) selectEvent(ver.eventId, { keepModal: true });
+  });
+  $("artifact-versions").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-ver]");
+    if (!btn) return;
+    state.artifactVersion = Number(btn.dataset.ver);
+    state.artifactRaw = false;
+    fillArtifactModal();
+  });
   $("artifact-modal").addEventListener("click", (e) => {
     if (e.target && e.target.id === "artifact-modal") closeArtifact();
+  });
+  syncArtifactPanel();
+  $("evt-bar").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-cat]");
+    if (!btn) return;
+    const cat = btn.dataset.cat;
+    if (cat === "only") state.eventFilters.artifactsOnly = !state.eventFilters.artifactsOnly;
+    else if (state.eventFilters.artifactsOnly) state.eventFilters.artifactsOnly = false;
+    else state.eventFilters[cat] = state.eventFilters[cat] === false;
+    saveEventFilters();
+    paintEventFilters();
+    rebuildFiltered();
+  });
+  $("stream-modes").addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-mode]");
+    if (!btn) return;
+    state.streamMode = btn.dataset.mode === "files" ? "files" : "traces";
+    syncStreamMode();
+    logKey = "";
+    if (state.streamMode === "files") renderArtifacts();
+    else renderLog(state.events.length ? lastIndexAtOrBefore(state.play) : -1);
+  });
+  $("session-chip").addEventListener("click", (e) => {
+    if (e.target.closest("#session-clear")) clearSelection();
+  });
+  document.querySelectorAll("#panel-tools > h2, #panel-alerts > h2, #panel-mesh > h2").forEach((head) => {
+    head.addEventListener("click", () => {
+      const panel = head.parentElement;
+      panel.classList.toggle("fold");
+      if (!panel.classList.contains("fold")) state.artifactFocus = false;
+      const toggle = head.querySelector(".fold-toggle");
+      if (toggle) toggle.textContent = panel.classList.contains("fold") ? "Show" : "Hide";
+      const focus = $("artifact-focus");
+      if (focus) focus.textContent = state.artifactFocus ? "All panels" : "Focus";
+    });
   });
   $("alerts-body").addEventListener("click", (e) => {
     const row = e.target.closest("[data-sel]");
@@ -4053,6 +5459,8 @@ function wire() {
     if (!drag || drag.id !== e.pointerId) {
       const node = pickNode(e.clientX, e.clientY);
       state.hoverId = node ? node.event.id : null;
+      state.hoverArt = node && state.artifactByEvent.has(node.event.id) ? state.artifactByEvent.get(node.event.id) : -1;
+      state.hoverFrom = node ? "scene" : "";
       canvas.style.cursor = node ? "pointer" : "grab";
       return;
     }
@@ -4076,8 +5484,8 @@ function wire() {
     const node = pickNode(e.clientX, e.clientY);
     if (node) {
       const artAt = state.artifactByEvent.get(node.event.id);
-      selectEvent(node.event.id);
-      if (artAt != null) openArtifact(artAt);
+      selectEvent(node.event.id, { keepModal: artAt != null });
+      if (artAt != null) openArtifact(artAt, versionForEvent(artAt, node.event.id));
       return;
     }
     const lane = pickLane(e.clientX, e.clientY);
@@ -4137,11 +5545,15 @@ function wire() {
       e.preventDefault();
       dolly(1 / DOLLY_STEP);
     } else if (e.key === "ArrowRight") {
-      if (state.artifactCursor >= 0) stepArtifact(1);
-      else nudge(0.01);
+      if (state.artifactCursor >= 0) {
+        e.preventDefault();
+        stepArtifact(1);
+      } else nudge(0.01);
     } else if (e.key === "ArrowLeft") {
-      if (state.artifactCursor >= 0) stepArtifact(-1);
-      else nudge(-0.01);
+      if (state.artifactCursor >= 0) {
+        e.preventDefault();
+        stepArtifact(-1);
+      } else nudge(-0.01);
     } else if (e.key === "[") {
       stepSpeed(-1);
     } else if (e.key === "]") {
